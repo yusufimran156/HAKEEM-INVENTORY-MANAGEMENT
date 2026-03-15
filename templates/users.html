@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block page_title %}User Management{% endblock %}
+{% block page_subtitle %}Manage system access and permissions{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-users text-primary me-2"></i> All Users</h5>
+            <div class="d-flex gap-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0 bg-light table-search"
+                        data-table-id="usersTable" placeholder="Search users...">
+                </div>
+                <button class="btn btn-primary fw-bold px-4">
+                    <i class="fas fa-user-plus me-2"></i> Add User
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="usersTable">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 text-muted small text-uppercase fw-bold">User</th>
+                    <th class="text-muted small text-uppercase fw-bold">Role</th>
+                    <th class="text-muted small text-uppercase fw-bold">Joined Date</th>
+                    <th class="text-muted small text-uppercase fw-bold">Status</th>
+                    <th class="actions-col text-muted small text-uppercase fw-bold">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center py-2">
+                            <div class="position-relative">
+                                <img src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=random&color=fff&bold=true"
+                                    class="rounded-circle me-3 shadow-sm" width="45" height="45">
+                                <span
+                                    class="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">{{ user.username }}</h6>
+                                <small class="text-muted">{{ user.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <form action="{{ url_for('update_user_role', user_id=user.id) }}" method="POST"
+                            class="d-inline">
+                            <select name="role" onchange="this.form.submit()"
+                                class="form-select form-select-sm border-0 fw-bold {{ 'bg-primary bg-opacity-10 text-primary' if user.role == 'admin' else 'bg-secondary bg-opacity-10 text-secondary' }}"
+                                style="width: 110px; cursor: pointer;">
+                                <option value="user" {% if user.role=='user' %}selected{% endif %}>User</option>
+                                <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="far fa-calendar-alt me-2"></i>
+                            {% if user.created_at %}
+                            {{ user.created_at.strftime('%d %b, %Y') }}
+                            {% else %}
+                            <span>-</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if user.status == 'blocked' %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-1 rounded-pill">Blocked</span>
+                        {% else %}
+                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-1 rounded-pill">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-col">
+                        <div class="btn-group shadow-sm">
+                            <a href="{{ url_for('admin_user_details', user_id=user.id) }}"
+                                class="btn btn-light btn-sm text-primary border" data-bs-toggle="tooltip"
+                                title="View Full Activity">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            {% if user.id != session.get('user_id') %}
+                            <!-- Status Toggle -->
+                            {% if user.status == 'blocked' %}
+                            <a href="{{ url_for('update_user_status', user_id=user.id, status='active') }}"
+                                class="btn btn-light btn-sm text-success border" title="Unblock User">
+                                <i class="fas fa-user-check"></i>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('update_user_status', user_id=user.id, status='blocked') }}"
+                                class="btn btn-light btn-sm text-warning border" title="Block User">
+                                <i class="fas fa-user-slash"></i>
+                            </a>
+                            {% endif %}
+
+                            <!-- Admin Toggle -->
+                            <a href="{{ url_for('toggle_admin_status', user_id=user.id) }}"
+                                class="btn btn-light btn-sm {{ 'text-purple' if user.is_admin else 'text-muted' }} border"
+                                title="{{ 'Remove Admin' if user.is_admin else 'Make Admin' }}">
+                                <i class="fas fa-shield-alt"></i>
+                            </a>
+
+                            <a href="{{ url_for('delete_user', user_id=user.id) }}"
+                                class="btn btn-light btn-sm text-danger hover-danger border"
+                                onclick="return confirm('Are you sure you want to remove this user? This action cannot be undone.')"
+                                data-bs-toggle="tooltip" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                            {% else %}
+                            <span class="badge bg-light text-muted border d-flex align-items-center px-2"
+                                style="height: 31px;">Current
+                                User</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+        <small class="text-muted">Showing {{ users|length }} users</small>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+    .text-purple {
+        color: #8b5cf6 !important;
+    }
+
+    .hover-danger:hover {
+        background-color: #fee2e2 !important;
+        border-color: #fca5a5 !important;
+    }
+</style>

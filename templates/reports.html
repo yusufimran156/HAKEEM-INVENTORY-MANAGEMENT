@@ -1,0 +1,210 @@
+{% extends "layout.html" %}
+
+{% block title %}System Reports{% endblock %}
+
+{% block page_title %}Analytics & Reports{% endblock %}
+{% block page_subtitle %}Deep dive into inventory and sales performance{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <!-- Sales Overview -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Sales Performance</h5>
+                    <span class="badge bg-success-subtle text-success">Last 30 Days</span>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <h2 class="fw-bold text-primary">₹{{ "%.2f"|format(sales_overview.revenue) }}</h2>
+                        <p class="text-muted small mb-0">Total Revenue</p>
+                    </div>
+                    <div class="col-6">
+                        <h2 class="fw-bold text-info">{{ sales_overview.count }}</h2>
+                        <p class="text-muted small mb-0">Total Transactions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Inventory Value -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0">Stock Value</h5>
+                    <span class="badge bg-primary-subtle text-primary">Live Inventory</span>
+                </div>
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <h2 class="fw-bold text-success">₹{{ "%.2f"|format(total_value) }}</h2>
+                        <p class="text-muted small mb-0">Total Asset Value</p>
+                    </div>
+                    <div class="col-6">
+                        <h2 class="fw-bold text-danger">{{ low_stock_products|length }}</h2>
+                        <p class="text-muted small mb-0">Low Stock Alerts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Daily Revenue Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0">Revenue Trends (Daily)</h6>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Last 14 Days
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                        <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <canvas id="dailyRevenueChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Revenue Chart -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h6 class="fw-bold mb-0">Monthly Comparison</h6>
+            </div>
+            <div class="card-body p-4">
+                <canvas id="monthlyRevenueChart" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 mb-5">
+    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Category Breakdown</h5>
+        <a href="{{ url_for('categories_admin') }}" class="btn btn-primary-light btn-sm">Manage Categories</a>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-4">
+            {% for cat in category_stats %}
+            <div class="col-md-3">
+                <div
+                    class="p-3 bg-light rounded-4 border-start border-4 {{ 'border-primary' if loop.index % 2 == 0 else 'border-info' }}">
+                    <h6 class="text-muted small text-uppercase fw-bold mb-1">{{ cat.name }}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold mb-0">{{ cat.product_count }}</h3>
+                            <small class="text-muted">Unique Products</small>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="fw-bold mb-0 text-dark">{{ cat.total_qty|default(0)|int }}</h4>
+                            <small class="text-muted">Total Stock</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Daily Revenue Chart
+        const dailyCtx = document.getElementById('dailyRevenueChart').getContext('2d');
+        new Chart(dailyCtx, {
+            type: 'line',
+            data: {
+                labels: {{ daily_labels| tojson }},
+        datasets: [{
+            label: 'Daily Revenue (₹)',
+            data: {{ daily_data| tojson }},
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#3b82f6',
+        pointBorderWidth: 2
+                }]
+            },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { borderDash: [5, 5] }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    }
+        });
+
+    // Monthly Revenue Chart
+    const monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ monthly_labels| tojson }},
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: {{ monthly_data| tojson }},
+        backgroundColor: [
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)',
+            'rgba(239, 68, 68, 0.8)',
+            'rgba(139, 92, 246, 0.8)',
+            'rgba(107, 114, 128, 0.8)'
+        ],
+        borderRadius: 8
+                }]
+            },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { borderDash: [5, 5] }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    }
+        });
+    });
+</script>
+
+<style>
+    .bg-primary-light {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .text-primary-light {
+        color: #3b82f6;
+    }
+</style>
+{% endblock %}

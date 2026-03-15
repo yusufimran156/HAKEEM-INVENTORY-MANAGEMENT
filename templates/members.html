@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block title %}Project Members - Hakeem Inventory{% endblock %}
+{% block page_title %}Our Team{% endblock %}
+{% block page_subtitle %}The brilliant minds behind Hakeem Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for member in team %}
+    <div class="col-md-4 mb-4">
+        <div class="card text-center h-100 border-0 shadow-sm hover-up position-relative">
+            {% if session.role == 'admin' %}
+            <div class="position-absolute top-0 end-0 p-3">
+                <a href="{{ url_for('manage_members') }}" class="btn btn-sm btn-light rounded-circle shadow-sm"
+                    title="Edit Team">
+                    <i class="fas fa-edit text-primary"></i>
+                </a>
+            </div>
+            {% endif %}
+            <div class="card-body p-5">
+                <div class="mb-4">
+                    {% if member.image_url and member.image_url.startswith('http') %}
+                    <img src="{{ member.image_url }}" alt="{{ member.name }}" class="rounded-circle shadow" width="120"
+                        height="120" style="object-fit: cover;">
+                    {% elif member.image_url %}
+                    <img src="{{ url_for('static', filename='uploads/' + member.image_url) }}" alt="{{ member.name }}"
+                        class="rounded-circle shadow" width="120" height="120" style="object-fit: cover;">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ member.name | urlencode }}" alt="{{ member.name }}"
+                        class="rounded-circle shadow" width="120" height="120" style="object-fit: cover;">
+                    {% endif %}
+                </div>
+                <h3 class="h5 fw-bold mb-1">{{ member.name }}</h3>
+                <p class="text-primary fw-medium small mb-3">{{ member.role }}</p>
+                <p class="text-muted small">{{ member.description }}</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    {% if member.linkedin %}
+                    <a href="{{ member.linkedin if member.linkedin.startswith('http') else 'https://linkedin.com/in/' + member.linkedin }}"
+                        target="_blank" class="btn btn-light btn-sm rounded-circle"><i
+                            class="fab fa-linkedin-in text-primary"></i></a>
+                    {% endif %}
+
+                    {% if member.github %}
+                    <a href="{{ member.github if member.github.startswith('http') else 'https://github.com/' + member.github }}"
+                        target="_blank" class="btn btn-light btn-sm rounded-circle"><i
+                            class="fab fa-github text-dark"></i></a>
+                    {% endif %}
+
+                    {% if member.email %}
+                    <a href="mailto:{{ member.email }}" class="btn btn-light btn-sm rounded-circle"><i
+                            class="fas fa-envelope text-danger"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .hover-up {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hover-up:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+{% endblock %}

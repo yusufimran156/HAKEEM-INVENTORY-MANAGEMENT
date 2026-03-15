@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inventory Management System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Essential Inline Styles for Layout */
+        body {
+            overflow-x: hidden;
+            background-color: var(--bg-main) !important;
+        }
+
+        /* Prevent layout shift during page load */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--primary-light);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+
+</head>
+
+<body class="{% if session.get('theme') == 'dark' %}dark-theme{% endif %}"
+    data-role="{% if session.get('role') == 'admin' %}admin{% else %}user{% endif %}">
+    <div id="loader">
+        <div class="loader-spinner mb-3"></div>
+        <h5 class="fw-bold text-primary">Hakeem Inventory</h5>
+        <p class="text-muted small">Loading your workspace...</p>
+    </div>
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <!-- 1. Fixed Header -->
+    <nav class="navbar navbar-expand-lg navbar-top px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('dashboard') }}"
+            style="font-size: 1.25rem;">
+            <i class="fas fa-boxes-stacked text-primary me-2"></i> Hakeem Inventory
+        </a>
+        <button class="navbar-toggler ms-auto border-0" type="button" onclick="toggleSidebar()">
+            <i class="fas fa-bars" style="color: var(--text-primary); font-size: 1.25rem;"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 d-none d-lg-flex">
+                <li class="nav-item">
+                    <a class="nav-link px-3 fw-medium {% if request.endpoint == 'index' %}active{% endif %}"
+                        href="{{ url_for('index') }}">
+                        Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 fw-medium {% if request.endpoint == 'shop' %}active{% endif %}"
+                        href="{{ url_for('shop') }}">
+                        Shop
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if session.get('user_id') %}
+                {% if session.get('role') != 'admin' %}
+                <li class="nav-item me-3">
+                    <div class="px-3 py-1 rounded-pill d-flex align-items-center shadow-sm"
+                        style="background-color: var(--bg-sidebar); border: 1px solid var(--border-color);">
+                        <i class="fas fa-wallet text-warning me-2"></i>
+                        <span class="fw-bold small" style="font-size: 0.85rem; color: var(--text-primary);">₹{{
+                            "{:,.2f}".format(wallet_balance) }}</span>
+                    </div>
+                </li>
+                {% endif %}
+                <li class="nav-item me-3">
+                    <a href="{{ url_for('view_cart') }}" class="nav-link position-relative p-2 hover-scale">
+                        <i class="fas fa-shopping-cart fs-5"></i>
+                        {% if cart_count > 0 %}
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-dark"
+                            style="font-size: 0.65rem; min-width: 1.2rem;">
+                            {{ cart_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://ui-avatars.com/api/?name={{ session.get('username', 'User')|urlencode }}&background=random&color=fff&bold=true"
+                            alt="User" width="32" height="32" class="rounded-circle me-2 shadow-sm"
+                            style="border: 2px solid var(--theme-side-border);">
+                        <span class="d-none d-lg-block fw-semibold">{{ session.get('username')|title }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg rounded-3 border-0 mt-2">
+                        <li>
+                            <h6 class="dropdown-header">Signed in as <b>{{ session.get('username') }}</b></h6>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i
+                                    class="fas fa-user-circle me-2 w-20px text-primary"></i>My Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i
+                                    class="fas fa-box-open me-2 w-20px text-info"></i>My Orders</a></li>
+                        {% if session.get('role') != 'admin' %}
+                        <li><a class="dropdown-item" href="{{ url_for('wallet') }}"><i
+                                    class="fas fa-wallet me-2 w-20px text-warning"></i>Wallet</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i
+                                    class="fas fa-sliders-h me-2 w-20px text-muted"></i>Settings</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i
+                                    class="fas fa-sign-out-alt me-2 w-20px"></i>Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 2. Fixed Sidebar -->
+    <nav id="sidebar-wrapper">
+        <div class="p-3">
+            <div class="d-flex align-items-center p-3 mb-4 rounded-3 mt-2"
+                style="background-color: var(--bg-main); border: 1px solid var(--border-color);">
+                <img src="https://ui-avatars.com/api/?name={{ session.get('username', 'User')|urlencode }}&background=random&color=fff&bold=true"
+                    alt="User" width="40" height="40" class="rounded-circle me-3">
+                <div class="overflow-hidden">
+                    <h6 class="mb-0 fw-bold text-truncate" style="color: var(--text-primary);">{{
+                        session.get('username')|title }}</h6>
+                    <small class="text-uppercase" style="font-size: 0.7rem; color: var(--text-secondary);">{{
+                        session.get('role', 'user') }}</small>
+                </div>
+            </div>
+
+            <ul class="list-unstyled components">
+                <!-- Mobile Only Links -->
+                <div class="d-md-none">
+                    <div class="sidebar-section-title">Navigation</div>
+                    <li class="mb-1">
+                        <a href="{{ url_for('index') }}" class="sidebar-link">
+                            <i class="fas fa-home me-3"></i> Home
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{{ url_for('shop') }}" class="sidebar-link">
+                            <i class="fas fa-shopping-bag me-3"></i> Shop
+                        </a>
+                    </li>
+                    <div class="sidebar-divider"></div>
+                </div>
+
+                <li class="mb-1">
+                    <a href="{{ url_for('dashboard') }}"
+                        class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-th-large da-fw me-3"></i> Dashboard
+                    </a>
+                </li>
+
+                {% if session.get('role') != 'admin' %}
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-section-title">Personal</div>
+
+                <li class="mb-1">
+                    <a href="{{ url_for('my_orders') }}"
+                        class="sidebar-link {% if request.endpoint == 'my_orders' %}active{% endif %}">
+                        <i class="fas fa-box da-fw me-3"></i> My Orders
+                    </a>
+                </li>
+
+                <li class="mb-1">
+                    <a href="{{ url_for('wallet') }}"
+                        class="sidebar-link {% if request.endpoint == 'wallet' %}active{% endif %}">
+                        <i class="fas fa-wallet da-fw me-3"></i> Wallet Balance
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if session.get('role') == 'admin' %}
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-section-title">Admin Management</div>
+
+                <li class="mb-1">
+                    <a href="{{ url_for('admin_orders') }}"
+                        class="sidebar-link {% if request.endpoint == 'admin_orders' %}active{% endif %}">
+                        <i class="fas fa-clipboard-list da-fw me-3"></i> All Orders
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="{{ url_for('admin_sales') }}"
+                        class="sidebar-link {% if request.endpoint == 'admin_sales' %}active{% endif %}">
+                        <i class="fas fa-hand-holding-dollar da-fw me-3"></i> Platform Sales
+                    </a>
+                </li>
+
+                <li class="mb-1">
+                    <a href="#productSubmenu" data-bs-toggle="collapse"
+                        class="sidebar-link d-flex justify-content-between align-items-center">
+                        <div><i class="fas fa-boxes-stacked da-fw me-3"></i> Manage Products</div>
+                        <i class="fas fa-chevron-down small"></i>
+                    </a>
+                    <ul class="collapse list-unstyled ps-4 ms-2" id="productSubmenu"
+                        style="border-left: 2px solid var(--border-color);">
+                        <li class="py-1">
+                            <a href="{{ url_for('admin_add_product') }}"
+                                class="sidebar-link py-1 small {% if request.endpoint == 'admin_add_product' %}active{% endif %}">
+                                <i class="fas fa-plus-circle me-2"></i> Add Product
+                            </a>
+                        </li>
+                        <li class="py-1">
+                            <a href="{{ url_for('admin_products') }}"
+                                class="sidebar-link py-1 small {% if request.endpoint == 'admin_products' %}active{% endif %}">
+                                <i class="fas fa-list me-2"></i> View Products
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="mb-1">
+                    <a href="{{ url_for('reports') }}"
+                        class="sidebar-link {% if request.endpoint == 'reports' %}active{% endif %}">
+                        <i class="fas fa-chart-pie da-fw me-3"></i> Reports
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="{{ url_for('users') }}"
+                        class="sidebar-link {% if request.endpoint == 'users' %}active{% endif %}">
+                        <i class="fas fa-users-cog da-fw me-3"></i> Manage Users
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Mobile Only Account Links -->
+                <div class="d-md-none">
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-section-title">Account</div>
+                    <li class="mb-1">
+                        <a href="{{ url_for('profile') }}" class="sidebar-link">
+                            <i class="fas fa-user-circle me-3"></i> Profile
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{{ url_for('settings') }}" class="sidebar-link">
+                            <i class="fas fa-cog me-3"></i> Settings
+                        </a>
+                    </li>
+                    <li class="mb-1">
+                        <a href="{{ url_for('logout') }}" class="sidebar-link text-danger">
+                            <i class="fas fa-sign-out-alt me-3"></i> Logout
+                        </a>
+                    </li>
+                </div>
+            </ul>
+        </div>
+        <div class="mt-auto p-4 text-center border-top" style="border-color: var(--border-color) !important;">
+            <small class="d-block text-muted">&copy; 2026</small>
+            <small class="text-muted">Hakeem Inventory</small>
+        </div>
+    </nav>
+
+    <!-- 3. Main Content Area -->
+    <main id="main-content">
+        <div class="container-fluid px-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 pt-3">
+                <div>
+                    <h1 class="h3 fw-bold text-dark mb-0">{% block page_title %}Dashboard{% endblock %}</h1>
+                    <p class="text-muted small mb-0">{% block page_subtitle %}Overview{% endblock %}</p>
+                </div>
+                {% block page_actions %}{% endblock %}
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show border-0 shadow-sm"
+                        role="alert">
+                        <i
+                            class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="animate-fade-in content-body">
+                {% block content %}{% endblock %}
+            </div>
+
+            <footer class="mt-5 py-4 border-top text-center text-muted">
+                <small>Hakeem Inventory Management System &copy; 2026</small>
+            </footer>
+        </div>
+    </main>
+
+    {% block modals %}{% endblock %}
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Initialize Theme System from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        function applyTheme(theme) {
+            document.body.classList.remove('light-theme', 'dark-theme');
+            document.body.classList.add(`${theme}-theme`);
+            localStorage.setItem('theme', theme);
+        }
+
+        // Sidebar Toggle for Mobile with Backdrop
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-wrapper');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.toggle('show');
+            backdrop.classList.toggle('show');
+            
+            // Prevent body scroll when sidebar is open on mobile/tablet
+            if (window.innerWidth <= 1024) {
+                document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+            }
+        }
+
+        // Close sidebar when clicking a link on mobile
+        document.querySelectorAll('#sidebar-wrapper .sidebar-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 1024) {
+                    toggleSidebar();
+                }
+            });
+        });
+
+        // Global Search & Loader (Preserved)
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('table-search')) {
+                const searchTerm = e.target.value.toLowerCase();
+                try {
+                    const tableId = e.target.getAttribute('data-table-id');
+                    const table = document.getElementById(tableId);
+                    const rows = table.getElementsByTagName('tr');
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        let found = false;
+                        const cells = row.getElementsByTagName('td');
+                        for (let j = 0; j < cells.length; j++) {
+                            if (cells[j].innerText.toLowerCase().includes(searchTerm)) {
+                                found = true; break;
+                            }
+                        }
+                        row.style.display = found ? "" : "none";
+                    }
+                } catch (err) { }
+            }
+        });
+        window.addEventListener('load', function () {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => { loader.style.display = 'none'; }, 500);
+            }
+            // Initialize Tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            // Dynamic Active State Handling for Navbar
+            function updateActiveLinks() {
+                const homeLink = document.querySelector(".navbar-top .nav-link[href='{{ url_for('index') }}']");
+                const shopLink = document.querySelector(".navbar-top .nav-link[href='{{ url_for('shop') }}']");
+
+                if (window.location.pathname === '/shop') {
+                    if (homeLink) homeLink.classList.remove('active');
+                    if (shopLink) shopLink.classList.add('active');
+                } else if (window.location.pathname === '/' || window.location.pathname === '/index') {
+                    if (homeLink) homeLink.classList.add('active');
+                    if (shopLink) shopLink.classList.remove('active');
+                }
+            }
+            updateActiveLinks();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block title %}Wallet Transactions - Admin{% endblock %}
+{% block page_title %}Wallet Administration{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">All Wallet Transactions</h5>
+        <div class="d-flex gap-2">
+            <input type="text" id="tableFilter" class="form-control form-control-sm"
+                placeholder="Search user, payment ID...">
+            <button class="btn btn-sm btn-outline-success" onclick="exportTableToCSV('wallet_txns.csv')">
+                <i class="fas fa-file-export me-1"></i> Export
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0" id="txnsTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Date</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Transaction ID</th>
+                        <th>Method</th>
+                        <th class="text-end pe-4">Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td class="ps-4 text-nowrap small text-muted">{{ txn.created_at }}</td>
+                        <td>
+                            <div class="fw-bold">{{ txn.username }}</div>
+                            <small class="text-muted">{{ txn.email }}</small>
+                        </td>
+                        <td>
+                            <span
+                                class="badge bg-{{ 'success' if txn.type == 'CREDIT' else 'danger' }}-subtle text-{{ 'success' if txn.type == 'CREDIT' else 'danger' }}">
+                                {{ txn.type }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="font-monospace small">
+                                {% if txn.description %}
+                                {{ txn.description }}
+                                {% else %}
+                                {{ txn.transaction_id }}
+                                {% endif %}
+                            </div>
+                            {% if txn.order_id %}
+                            <div class="text-muted small">Order ID: {{ txn.order_id }}</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ txn.payment_method }}</td>
+                        <td class="text-end pe-4 fw-bold">₹{{ "{:,.2f}".format(txn.amount) }}</td>
+                        <td>
+                            {% if txn.status == 'SUCCESS' %}
+                            <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                            {% else %}
+                            <span class="text-danger"><i class="fas fa-times-circle"></i></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple Client-side Filter
+    document.getElementById('tableFilter').addEventListener('keyup', function () {
+        const value = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#txnsTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.indexOf(value) > -1 ? '' : 'none';
+        });
+    });
+
+    // Simple CSV Export
+    function exportTableToCSV(filename) {
+        const csv = [];
+        const rows = document.querySelectorAll("table tr");
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll("td, th");
+
+            for (let j = 0; j < cols.length; j++)
+                row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+
+            csv.push(row.join(","));
+        }
+
+        downloadCSV(csv.join("\n"), filename);
+    }
+
+    function downloadCSV(csv, filename) {
+        const csvFile = new Blob([csv], { type: "text/csv" });
+        const downloadLink = document.createElement("a");
+        downloadLink.download = filename;
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+    }
+</script>
+{% endblock %}

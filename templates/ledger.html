@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ type }} Ledger - Hakeem Inventory{% endblock %}
+{% block page_title %}{{ type }} Ledger: {{ entity.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('customers') if type == 'Customer' else url_for('suppliers') }}"
+    class="btn btn-outline-secondary shadow-sm">
+    <i class="fas fa-arrow-left me-2"></i>Back to {{ type }}s
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 80px; height: 80px;">
+                        <i class="fas fa-{{ 'user' if type == 'Customer' else 'truck' }} fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">{{ entity.name }}</h4>
+                    <p class="text-muted small">Account ID: #{{ entity.id }}</p>
+                </div>
+
+                <div class="border-top pt-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">Current Balance</span>
+                        <span class="fw-bold text-{{ 'danger' if entity.balance > 0 else 'success' }}">
+                            ₹{{ "{:,.2f}".format(entity.balance) }}
+                            <small class="text-muted fw-normal d-block text-end" style="font-size: 0.7em;">
+                                {{ 'Due from Customer' if type == 'Customer' and entity.balance > 0 else '' }}
+                                {{ 'Payable to Supplier' if type == 'Supplier' and entity.balance > 0 else '' }}
+                                {{ 'Settled' if entity.balance == 0 else '' }}
+                            </small>
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">Email</span>
+                        <span class="small">{{ entity.email or 'N/A' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted small">Phone</span>
+                        <span class="small">{{ entity.phone or 'N/A' }}</span>
+                    </div>
+                    {% if type == 'Supplier' %}
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Status</span>
+                        <span
+                            class="badge bg-{{ 'warning' if entity.status == 'Creditor' else 'info' }}-subtle text-{{ 'warning' if entity.status == 'Creditor' else 'info' }} rounded-pill">{{
+                            entity.status }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark">Transaction History</h5>
+                <span class="badge bg-light text-dark">{{ ledger|length }} Records</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Date</th>
+                            <th>Description</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Paid</th>
+                            <th class="text-end pe-4">Due</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in ledger %}
+                        <tr>
+                            <td class="ps-4">
+                                <small class="text-muted">{{ entry.created_at.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ entry.type }} #{{ entry.id }}</div>
+                                <a href="{{ url_for('generate_invoice', type=entry.type|lower, id=entry.id) }}"
+                                    class="extra-small text-primary text-decoration-none">View Invoice</a>
+                            </td>
+                            <td class="text-end fw-medium text-dark">₹{{ "{:,.2f}".format(entry.total_amount) }}</td>
+                            <td class="text-end text-success">₹{{ "{:,.2f}".format(entry.paid_amount) }}</td>
+                            <td class="text-end pe-4 text-{{ 'danger' if entry.due_amount > 0 else 'success' }}">
+                                ₹{{ "{:,.2f}".format(entry.due_amount) }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="fas fa-file-invoice fa-3x text-muted mb-3 opacity-25"></i>
+                                    <p class="text-muted mb-0">No transactions found for this {{ type|lower }}.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

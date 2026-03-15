@@ -1,0 +1,430 @@
+{% extends "layout.html" %}
+
+{% block title %}Architecture - Inventory Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+    }
+
+    .hero-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        color: white;
+        padding: 2rem;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 900px;
+    }
+
+    /* System Overview Section - Responsive Flex */
+    .overview-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        padding: 40px 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        margin: 40px 0;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.3s ease;
+        flex: 0 0 100px;
+    }
+
+    .node:hover {
+        transform: scale(1.1);
+    }
+
+    .node-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--bg-main);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--shadow-md);
+        color: var(--accent-color);
+        font-size: 1.25rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .connection-arrow {
+        flex: 1 1 30px;
+        height: 2px;
+        background: var(--border-color);
+        position: relative;
+        min-width: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .connection-arrow {
+            display: none;
+        }
+        .overview-container {
+            flex-direction: column;
+        }
+    }
+
+    .connection-arrow::after {
+        content: '\f061';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: -5px;
+        top: -10px;
+        color: var(--text-secondary);
+    }
+
+    /* Flowchart Section */
+    .flow-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 30px;
+        height: 100%;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .flow-card:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-color);
+    }
+
+    .flow-step {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .flow-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: 17px;
+        top: 35px;
+        height: 25px;
+        width: 2px;
+        background: var(--border-color);
+    }
+
+    .step-circle {
+        width: 36px;
+        height: 36px;
+        background: var(--bg-main);
+        color: var(--accent-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border-color);
+        font-weight: bold;
+        z-index: 1;
+    }
+
+    /* Architecture Section */
+    .arch-layer {
+        background: var(--bg-card);
+        border: 2px dashed var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .arch-layer.frontend {
+        border-color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.05);
+    }
+
+    .arch-layer.backend {
+        border-color: var(--secondary-accent, #10b981);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .arch-layer.database {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    /* Tech Cards */
+    .tech-card {
+        padding: 24px;
+        text-align: center;
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .parallax-icon {
+        position: absolute;
+        opacity: 0.1;
+        color: white;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- 1. Hero Section -->
+    <div class="hero-gradient mb-5 p-5 text-center">
+        <div class="hero-content">
+            <span class="badge bg-primary rounded-pill px-3 py-2 mb-3 fw-bold">PROJECT DOCUMENTATION</span>
+            <h1 class="display-3 fw-bold mb-4">Inventory Management System <br><span class="text-primary">Project
+                    Workflow</span></h1>
+            <p class="lead mb-4 opacity-75">A high-performance, professional-grade solution demonstrating the complete
+                lifecycle of a modern web application, from RESTful communication to secure database persistence.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#workflow" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold">Explore Architecture</a>
+                <a href="{{ url_for('shop') }}" class="btn btn-outline-light btn-lg rounded-pill px-5 fw-bold">Try
+                    Demo</a>
+            </div>
+        </div>
+        <i class="fas fa-server parallax-icon" style="top: 10%; left: 5%; font-size: 8rem;"></i>
+        <i class="fas fa-code parallax-icon" style="bottom: 10%; right: 5%; font-size: 8rem;"></i>
+    </div>
+
+    <!-- 2. System Overview Section -->
+    <section class="mb-5" id="workflow">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">System Architecture Overview</h2>
+            <p class="text-muted">How data flows through the application layers</p>
+        </div>
+
+        <div class="overview-container">
+            <div class="node">
+                <div class="node-icon"><i class="fas fa-user"></i></div>
+                <span class="fw-bold small">User</span>
+            </div>
+            <div class="connection-arrow"></div>
+            <div class="node">
+                <div class="node-icon"><i class="fas fa-globe"></i></div>
+                <span class="fw-bold small">Web Browser</span>
+            </div>
+            <div class="connection-arrow"></div>
+            <div class="node">
+                <div class="node-icon"><i class="fas fa-network-wired"></i></div>
+                <span class="fw-bold small">REST API</span>
+            </div>
+            <div class="connection-arrow"></div>
+            <div class="node">
+                <div class="node-icon"><i class="fas fa-server"></i></div>
+                <span class="fw-bold small">Flask Backend</span>
+            </div>
+            <div class="connection-arrow"></div>
+            <div class="node">
+                <div class="node-icon"><i class="fas fa-database"></i></div>
+                <span class="fw-bold small">MySQL DB</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Flowchart Section -->
+    <section class="mb-5">
+        <div class="row g-4">
+            <!-- Registration Flow -->
+            <div class="col-lg-4">
+                <div class="flow-card">
+                    <h5 class="fw-bold mb-4 text-primary"><i class="fas fa-user-plus me-2"></i>User Registration</h5>
+                    <div class="flow-step">
+                        <div class="step-circle">1</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Form Submission</h6><small class="text-muted">Client-side
+                                validation</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">2</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Password Hashing</h6><small class="text-muted">Werkzeug
+                                Security</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">3</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">DB Persistence</h6><small class="text-muted">Stored in Users
+                                table</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">4</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Session Start</h6><small class="text-muted">Dashboard
+                                access</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Flow -->
+            <div class="col-lg-4">
+                <div class="flow-card">
+                    <h5 class="fw-bold mb-4 text-success"><i class="fas fa-shopping-cart me-2"></i>Product Purchase</h5>
+                    <div class="flow-step">
+                        <div class="step-circle">1</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Product Selection</h6><small class="text-muted">Catalogue
+                                filtering</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">2</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Wallet Audit</h6><small class="text-muted">Balance
+                                verification</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">3</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Atomic Transaction</h6><small class="text-muted">Deduct & Record
+                                Order</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">4</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Stock Sync</h6><small class="text-muted">Instant inventory
+                                update</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Flow -->
+            <div class="col-lg-4">
+                <div class="flow-card">
+                    <h5 class="fw-bold mb-4 text-info"><i class="fas fa-user-shield me-2"></i>Admin Workflow</h5>
+                    <div class="flow-step">
+                        <div class="step-circle">1</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Privileged Login</h6><small class="text-muted">Role-based
+                                Auth</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">2</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Inventory CRUD</h6><small class="text-muted">Add/Edit/Delete
+                                stock</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">3</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">User Oversight</h6><small class="text-muted">Monitor activity &
+                                roles</small>
+                        </div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="step-circle">4</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Reports Engine</h6><small class="text-muted">Export CSV/Excel
+                                stats</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Architecture Diagram Section -->
+    <section class="mb-5">
+        <div class="card border-0 shadow-sm rounded-4 p-5">
+            <h3 class="fw-bold text-center mb-5">Modular Project Hierarchy</h3>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="arch-layer frontend">
+                        <h5 class="fw-bold text-primary mb-1">Frontend Presentation Layer</h5>
+                        <p class="mb-0 small text-muted">HTML, CSS, JavaScript (Bootstrap 5 & FontAwesome)</p>
+                    </div>
+                    <div class="text-center my-2 text-muted"><i class="fas fa-arrows-up-down fs-4"></i></div>
+                    <div class="arch-layer backend">
+                        <h5 class="fw-bold text-success mb-1">Backend Logic Layer</h5>
+                        <p class="mb-0 small text-muted">Python Flask, REST API Routes, Session Management</p>
+                    </div>
+                    <div class="text-center my-2 text-muted"><i class="fas fa-arrows-up-down fs-4"></i></div>
+                    <div class="arch-layer database">
+                        <h5 class="fw-bold text-warning mb-1">Data Storage Layer</h5>
+                        <p class="mb-0 small text-muted">MySQL Architecture, Referential Integrity</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Technologies Used Section -->
+    <section class="mb-5">
+        <h4 class="fw-bold text-center mb-5">Technology Stack</h4>
+        <div class="row g-4 row-cols-2 row-cols-md-4 row-cols-lg-7">
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fab fa-html5 text-danger"></i>
+                    <h6 class="fw-bold mb-0">HTML</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fab fa-css3-alt text-primary"></i>
+                    <h6 class="fw-bold mb-0">CSS</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fab fa-js text-warning"></i>
+                    <h6 class="fw-bold mb-0">JavaScript</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fab fa-python text-info"></i>
+                    <h6 class="fw-bold mb-0">Python</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fas fa-flask text-dark"></i>
+                    <h6 class="fw-bold mb-0">Flask</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fas fa-database text-secondary"></i>
+                    <h6 class="fw-bold mb-0">MySQL</h6>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tech-card">
+                    <i class="fas fa-cloud text-success"></i>
+                    <h6 class="fw-bold mb-0">REST API</h6>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

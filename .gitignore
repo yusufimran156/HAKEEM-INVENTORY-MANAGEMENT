@@ -1,0 +1,32 @@
+# Python Environment
+venv/
+env/
+ENV/
+.env
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE Settings
+.vscode/
+.idea/
+
+# Logs and Debug files
+*.log
+debug_out.txt
+pip_out.txt
+schema_info.txt
+
+# Database (if local sqlite is used)
+*.sqlite3
+*.db
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Static uploads (if any)
+static/uploads/*
+!static/uploads/.gitkeep

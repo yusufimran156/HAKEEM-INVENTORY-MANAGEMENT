@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{% block title %}Manage Admin Team{% endblock %}
+{% block page_title %}Admin Team Management{% endblock %}
+{% block page_subtitle %}Manage your enterprise team members{% endblock %}
+
+{% block page_actions %}
+<a href="{{ url_for('admin_add_team_member') }}" class="btn btn-primary rounded-pill px-4 shadow-sm hover-scale">
+    <i class="fas fa-plus me-2"></i>Add Member
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div
+        class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-users-cog text-primary me-2"></i> Team Members</h5>
+
+        <form method="GET" action="{{ url_for('admin_team') }}" class="d-flex align-items-center gap-2 flex-wrap">
+            <select name="role" class="form-select form-select-sm border-0 bg-light rounded-pill"
+                style="min-width: 130px;" onchange="this.form.submit()">
+                <option value="">All Roles</option>
+                <option value="Manager" {% if request.args.get('role')=='Manager' %}selected{% endif %}>Manager</option>
+                <option value="Staff" {% if request.args.get('role')=='Staff' %}selected{% endif %}>Staff</option>
+                <option value="Support" {% if request.args.get('role')=='Support' %}selected{% endif %}>Support</option>
+                <option value="Delivery" {% if request.args.get('role')=='Delivery' %}selected{% endif %}>Delivery
+                </option>
+                <option value="Accountant" {% if request.args.get('role')=='Accountant' %}selected{% endif %}>Accountant
+                </option>
+            </select>
+
+            <select name="status" class="form-select form-select-sm border-0 bg-light rounded-pill"
+                style="min-width: 120px;" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="Active" {% if request.args.get('status')=='Active' %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if request.args.get('status')=='Inactive' %}selected{% endif %}>Inactive
+                </option>
+            </select>
+
+            <div class="input-group input-group-sm" style="max-width: 250px;">
+                <input type="text" name="search"
+                    class="form-control border-end-0 bg-light rounded-start-pill border-0 px-3"
+                    placeholder="Search team..." value="{{ request.args.get('search', '') }}">
+                <button class="btn bg-light border-0 rounded-end-pill px-3" type="submit"><i
+                        class="fas fa-search text-muted"></i></button>
+            </div>
+
+            {% if request.args %}
+            <a href="{{ url_for('admin_team') }}"
+                class="btn btn-sm btn-light rounded-pill px-3 shadow-none text-muted">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="responsive-table-wrapper">
+            <table class="table table-hover align-middle mb-0" id="teamTable">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Member</th>
+                        <th>Contact Email</th>
+                        <th>Role & Dept</th>
+                        <th>Joined Date</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr class="hover-shadow-sm transition-all">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                {% if member.profile_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + member.profile_image) }}"
+                                    alt="Profile" class="rounded-circle me-3 object-fit-cover shadow-sm border"
+                                    width="45" height="45">
+                                {% else %}
+                                <div class="rounded-circle me-3 d-flex align-items-center justify-content-center bg-primary text-white shadow-sm fw-bold"
+                                    style="width: 45px; height: 45px; font-size: 1.2rem;">
+                                    {{ member.full_name[:1]|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0 fw-bold text-dark">{{ member.full_name }}</h6>
+                                    <small class="text-muted"><i class="fas fa-phone-alt me-1"
+                                            style="font-size: 0.7rem;"></i>{{ member.phone or 'N/A' }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-primary fw-medium">{{ member.email }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column">
+                                <span
+                                    class="badge bg-secondary bg-opacity-10 text-secondary mb-1 align-self-start border rounded-pill px-2 py-1"><i
+                                        class="fas fa-briefcase me-1"></i>{{ member.role }}</span>
+                                <small class="text-muted fw-medium"><i class="fas fa-building me-1"></i>{{
+                                    member.department }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted small fw-medium">{{ member.joined_date.strftime('%d %b, %Y') if
+                                member.joined_date else 'N/A' }}</span>
+                        </td>
+                        <td>
+                            {% if member.status == 'Active' %}
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1"><i
+                                    class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> Active</span>
+                            {% else %}
+                            <span
+                                class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-1"><i
+                                    class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('admin_edit_team_member', id=member.id) }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-none hover-scale me-1"
+                                data-bs-toggle="tooltip" title="Edit details">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if member.status == 'Active' %}
+                            <button type="button"
+                                class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-none hover-scale"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal{{ member.id }}" title="Deactivate">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Deactivate Modal -->
+                    <div class="modal fade" id="deleteModal{{ member.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <div class="modal-header border-bottom-0 pb-0">
+                                    <h5 class="modal-title fw-bold">Confirm Deactivation</h5>
+                                    <button type="button" class="btn-close shadow-none"
+                                        data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center py-4">
+                                    <div class="text-warning mb-3">
+                                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                                    </div>
+                                    <h5 class="fw-bold mb-2">Deactivate {{ member.full_name }}?</h5>
+                                    <p class="text-muted mb-0">Are you sure you want to change the status to Inactive?
+                                        They will lose dashboard access.</p>
+                                </div>
+                                <div class="modal-footer border-top-0 d-flex justify-content-center pt-0 pb-4">
+                                    <button type="button" class="btn btn-light rounded-pill px-4"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <a href="{{ url_for('admin_delete_team_member', id=member.id) }}"
+                                        class="btn btn-danger rounded-pill px-4 shadow-sm">Confirm Deactivate</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-user-friends fa-3x mb-3 text-light"></i>
+                                <h5>No team members found!</h5>
+                                <p>Try adjusting your filters or add a new team member.</p>
+                                <a href="{{ url_for('admin_add_team_member') }}"
+                                    class="btn btn-primary rounded-pill mt-2 px-4 shadow-sm">Add First Member</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .transition-all {
+        transition: all 0.2s ease;
+    }
+
+    .hover-shadow-sm:hover {
+        background-color: #f8f9fa;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) inset;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+</style>
+{% endblock %}

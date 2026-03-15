@@ -1,0 +1,293 @@
+{% extends "layout.html" %}
+
+{% block title %}Our Team - Inventory Management System{% endblock %}
+
+{% block page_title %}Our Team{% endblock %}
+{% block page_subtitle %}The developers behind the Inventory Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-card {
+        border: none;
+        border-radius: 16px;
+        background: var(--card-bg);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 40px 20px 30px;
+        position: relative;
+    }
+
+    .team-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.8) 0%, rgba(29, 78, 216, 0.9) 100%);
+        z-index: 0;
+    }
+
+    .dark-theme .team-card::before {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    }
+
+    .team-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .team-image-wrapper {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        padding: 6px;
+        background: var(--card-bg);
+        position: relative;
+        z-index: 1;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .team-image {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #94a3b8;
+    }
+
+    .team-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+        z-index: 1;
+    }
+
+    .team-role {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 15px;
+        z-index: 1;
+    }
+
+    .team-desc {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 25px;
+        flex-grow: 1;
+        z-index: 1;
+    }
+
+    .team-social {
+        display: flex;
+        gap: 15px;
+        z-index: 1;
+    }
+
+    .social-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+        background: var(--primary);
+        color: #ffffff;
+        transform: scale(1.1);
+    }
+
+    .leader-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #f59e0b;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .edit-team-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        z-index: 2;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .edit-team-btn:hover {
+        background: white;
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 mb-5 pb-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark mb-2">Meet the Developers</h2>
+        <p class="text-muted">The academic team behind the architecture and logic of this project.</p>
+        <div class="mt-3 mx-auto" style="width: 60px; height: 4px; background: var(--primary); border-radius: 2px;">
+        </div>
+    </div>
+
+    <!-- Project Leader Centered -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="team-card">
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_team') }}" class="edit-team-btn">
+                    <i class="fas fa-edit me-1"></i> Edit Team
+                </a>
+                {% endif %}
+                <div class="leader-badge">
+                    <i class="fas fa-crown"></i> Team Lead
+                </div>
+                <div class="team-image-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Mohammed+Saheeque&background=2563eb&color=fff&size=200&bold=true"
+                        alt="Mohammed Saheeque" class="team-image">
+                </div>
+                <h3 class="team-name">Mohammed Saheeque</h3>
+                <div class="team-role">Project Leader & Full Stack</div>
+                <p class="team-desc">Architected the core system workflow, seamlessly integrating Flask backend logic
+                    with a dynamic frontend experience while managing the overall project vision.</p>
+                <div class="team-social">
+                    <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-icon" title="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rest of the Team -->
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-3">
+            <div class="team-card">
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_team') }}" class="edit-team-btn">
+                    <i class="fas fa-edit me-1"></i> Edit Team
+                </a>
+                {% endif %}
+                <div class="team-image-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Yusuf&background=10b981&color=fff&size=200&bold=true"
+                        alt="Yusuf" class="team-image">
+                </div>
+                <h3 class="team-name">Yusuf</h3>
+                <div class="team-role">Backend Developer</div>
+                <p class="team-desc">Engineered robust REST APIs, managed secure user authentication, and optimized
+                    internal routing functions using Python and Flask.</p>
+                <div class="team-social">
+                    <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" title="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="team-card">
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_team') }}" class="edit-team-btn">
+                    <i class="fas fa-edit me-1"></i> Edit Team
+                </a>
+                {% endif %}
+                <div class="team-image-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Kalaiyarasan&background=f59e0b&color=fff&size=200&bold=true"
+                        alt="Kalaiyarasan" class="team-image">
+                </div>
+                <h3 class="team-name">Kalaiyarasan</h3>
+                <div class="team-role">Frontend Developer</div>
+                <p class="team-desc">Crafted modern, responsive user interfaces leveraging HTML, CSS, JavaScript, and
+                    Bootstrap 5 to deliver an Amazon-inspired aesthetic.</p>
+                <div class="team-social">
+                    <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" title="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="team-card">
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_team') }}" class="edit-team-btn">
+                    <i class="fas fa-edit me-1"></i> Edit Team
+                </a>
+                {% endif %}
+                <div class="team-image-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Ayub&background=8b5cf6&color=fff&size=200&bold=true"
+                        alt="Ayub" class="team-image">
+                </div>
+                <h3 class="team-name">Ayub</h3>
+                <div class="team-role">Database Manager</div>
+                <p class="team-desc">Designed database schemas, implemented secure queries, and maintained structural
+                    integrity across all tables ensuring high performance.</p>
+                <div class="team-social">
+                    <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" title="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="team-card">
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_team') }}" class="edit-team-btn">
+                    <i class="fas fa-edit me-1"></i> Edit Team
+                </a>
+                {% endif %}
+                <div class="team-image-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=Ameen&background=ec4899&color=fff&size=200&bold=true"
+                        alt="Ameen" class="team-image">
+                </div>
+                <h3 class="team-name">Ameen</h3>
+                <div class="team-role">Testing & Documentation</div>
+                <p class="team-desc">Executed rigorous edge-case testing, ensured system stability, and authored
+                    comprehensive academic documentation and flowcharts.</p>
+                <div class="team-social">
+                    <a href="#" class="social-icon" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-icon" title="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

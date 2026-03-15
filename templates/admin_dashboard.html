@@ -1,0 +1,421 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block page_title %}Admin Control Center{% endblock %}
+{% block page_subtitle %}System-wide Analytics & Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Premium CSS */
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--accent-color);
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .chart-card {
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        background-color: var(--bg-card);
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid var(--border-color);
+        margin-left: 1rem;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: -11px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: var(--bg-card);
+        border: 2px solid var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-icon i {
+        font-size: 0.5rem;
+        color: var(--accent-color);
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Stats Cards (Premium Style) -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">{{ total_users }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Products</div>
+                    <div class="stat-value">{{ total_products | default(0) }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                    <i class="fas fa-boxes-stacked"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Orders</div>
+                    <div class="stat-value">{{ total_orders }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="stat-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+                </div>
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                    <i class="fas fa-indian-rupee-sign"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Stats Removed -->
+
+<div class="d-flex justify-content-end mb-4 gap-2">
+    <a href="{{ url_for('export_report', type='weekly') }}"
+        class="btn btn-sm text-primary border-primary rounded-pill px-3 py-1 fw-semibold align-items-center d-flex transition-all"><i
+            class="fas fa-file-excel me-2"></i>Weekly CSV</a>
+    <a href="{{ url_for('export_report', type='monthly') }}"
+        class="btn btn-sm text-primary border-primary rounded-pill px-3 py-1 fw-semibold align-items-center d-flex"><i
+            class="fas fa-file-excel me-2"></i>Monthly CSV</a>
+    <a href="{{ url_for('export_report', type='yearly') }}"
+        class="btn btn-sm text-primary border-primary rounded-pill px-3 py-1 fw-semibold align-items-center d-flex"><i
+            class="fas fa-file-excel me-2"></i>Yearly CSV</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Bar Chart -->
+    <div class="col-lg-8">
+        <div class="chart-card bg-white p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-chart-column text-primary me-2"></i>Monthly Sales
+                </h5>
+                <select id="revenuePeriod" class="form-select form-select-sm w-auto fw-semibold border-0 bg-light"
+                    onchange="fetchRevenueData()">
+                    <option value="weekly">Past 7 Days</option>
+                    <option value="monthly" selected>Past 30 Days</option>
+                    <option value="yearly">Past 12 Months</option>
+                </select>
+            </div>
+            <div style="height: 300px; position: relative;">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Pie Chart -->
+    <div class="col-lg-4">
+        <div class="chart-card bg-white p-4 h-100">
+            <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-chart-pie text-secondary me-2"></i>Category Distribution
+            </h5>
+            <div style="height: 250px; position: relative; display: flex; justify-content: center;">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Low Stock Alert Table / Recent Orders (Combined conceptually) -->
+    <div class="col-lg-7">
+        <div class="chart-card bg-white p-0 h-100">
+            <div class="p-4 border-bottom">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-boxes-stacked" style="color: var(--primary);"></i>
+                    Inventory Health & Actions</h5>
+            </div>
+            <div class="table-responsive p-0 m-0 border-0">
+                <table class="table table-hover align-middle mb-0 border-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0 px-4 text-muted fw-semibold">Product Name</th>
+                            <th class="border-0 text-muted fw-semibold">Status</th>
+                            <th class="border-0 text-muted fw-semibold text-end px-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in low_stock %}
+                        <tr>
+                            <td class="px-4 border-bottom-0 pb-3 pt-3">
+                                <div class="fw-semibold text-dark text-truncate" style="max-width: 250px;">{{ p.name }}
+                                </div>
+                            </td>
+                            <td class="border-bottom-0">
+                                <span
+                                    class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-3 py-2 fw-semibold">Low
+                                    Stock ({{ p.quantity }})</span>
+                            </td>
+                            <td class="border-bottom-0 text-end px-4">
+                                <a href="{{ url_for('admin_products') }}"
+                                    class="btn btn-sm btn-outline-primary rounded-pill px-3">Restock</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if not low_stock %}
+                        <tr>
+                            <td colspan="3" class="text-center py-5 border-bottom-0">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <div class="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center mb-3"
+                                        style="width: 60px; height: 60px;">
+                                        <i class="fas fa-check text-success fs-3"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-dark">Healthy Inventory</h6>
+                                    <p class="text-muted small mb-0">All products have sufficient stock.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Activity -->
+    <div class="col-lg-5">
+        <div class="chart-card bg-white p-4 h-100">
+            <h5 class="fw-bold mb-4 text-dark"><i class="fas fa-bolt text-warning me-2"></i>Recent Activity</h5>
+            <div class="px-2 mt-2">
+                {% if recent_activity %}
+                {% for activity in recent_activity[:5] %}
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        {% if activity.type == 'IN' %}
+                        <i class="fas fa-plus"></i>
+                        {% else %}
+                        <i class="fas fa-minus"></i>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark fs-6">{{ activity.product_name }}</h6>
+                            <p class="text-muted small mb-0">{{ activity.reason }}</p>
+                        </div>
+                        <div class="text-end">
+                            <span
+                                class="badge {% if activity.type == 'IN' %}bg-success{% else %}bg-primary{% endif %} bg-opacity-10 text-{% if activity.type == 'IN' %}success{% else %}primary{% endif %} rounded-pill px-2">
+                                {% if activity.type == 'IN' %}+{% else %}-{% endif %}{{ activity.quantity }}
+                            </span>
+                            <div class="text-muted mt-1" style="font-size: 0.70rem;">{{
+                                activity.created_at.strftime('%H:%M, %d %b') }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center py-4">No recent activity found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="application/json" id="pie_labels_data">
+  {{ pie_labels | tojson | safe }}
+</script>
+<script type="application/json" id="pie_data_data">
+  {{ pie_data | tojson | safe }}
+</script>
+
+<script>
+    var salesChart;
+
+    function fetchRevenueData() {
+        var period = document.getElementById('revenuePeriod').value;
+        fetch(`/api/admin/revenue-trend?period=${period}`)
+            .then(res => res.json())
+            .then(data => {
+                if (salesChart) {
+                    salesChart.destroy();
+                }
+                var bctx = document.getElementById('salesChart').getContext('2d');
+
+                // create gradient for bar
+                let gradient = bctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(37, 99, 235, 1)');   // primary
+                gradient.addColorStop(1, 'rgba(37, 99, 235, 0.2)');
+
+                const isDark = document.body.classList.contains('dark-theme');
+                const textColor = isDark ? '#94a3b8' : '#64748b';
+                const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+                salesChart = new Chart(bctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Revenue (₹)',
+                            data: data.data,
+                            backgroundColor: gradient,
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barThickness: 24,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: isDark ? '#020617' : '#1E293B',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                padding: 12,
+                                titleFont: { family: 'Outfit', size: 13 },
+                                bodyFont: { family: 'Outfit', size: 14, weight: 'bold' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: gridColor,
+                                    drawBorder: false
+                                },
+                                ticks: { 
+                                    color: textColor,
+                                    font: { family: 'Outfit' } 
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { 
+                                    color: textColor,
+                                    font: { family: 'Outfit' } 
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const pieLabels = JSON.parse(document.getElementById('pie_labels_data').textContent);
+        const pieData = JSON.parse(document.getElementById('pie_data_data').textContent);
+
+        fetchRevenueData();
+
+        const isDark = document.body.classList.contains('dark-theme');
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        var pctx = document.getElementById('statusChart').getContext('2d');
+        var statusChart = new Chart(pctx, {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: [
+                        '#3b82f6', '#10B981', '#F59E0B', '#EF4444', '#6B7280', '#2563EB', '#8B5CF6'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: textColor,
+                            font: { family: 'Outfit', size: 12 },
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: isDark ? '#020617' : '#1E293B',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        titleFont: { family: 'Outfit' },
+                        bodyFont: { family: 'Outfit', weight: 'bold' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

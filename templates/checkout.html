@@ -1,0 +1,343 @@
+{% extends "layout.html" %}
+
+{% block title %}Checkout - Hakeem Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-progress {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 2rem;
+        padding: 0 1rem;
+    }
+
+    .checkout-progress::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: 1;
+        transform: translateY(-50%);
+    }
+
+    .step-indicator {
+        position: relative;
+        z-index: 2;
+        background: #fff;
+        padding: 0 10px;
+        text-align: center;
+        color: #999;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 5px;
+        font-weight: bold;
+        transition: 0.3s all;
+    }
+
+    .step-indicator.active {
+        color: #2874f0;
+    }
+
+    .step-indicator.active .step-circle {
+        background: #2874f0;
+        box-shadow: 0 0 0 5px rgba(40, 116, 240, 0.2);
+    }
+
+    .step-indicator.completed {
+        color: #28a745;
+    }
+
+    .step-indicator.completed .step-circle {
+        background: #28a745;
+    }
+
+    .checkout-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .checkout-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+    }
+
+    .checkout-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .checkout-btn {
+        background: linear-gradient(135deg, #2874f0 0%, #00d2ff 100%);
+        border: none;
+        color: white;
+        font-weight: bold;
+        padding: 12px 30px;
+        border-radius: 30px;
+        transition: transform 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .checkout-btn:hover {
+        transform: scale(1.03);
+        color: white;
+    }
+
+    .address-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .address-card:hover {
+        border-color: #2874f0;
+    }
+
+    .address-input:checked+.address-card {
+        border-color: #2874f0;
+        background-color: #f8fbff;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Secure Checkout{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Progress Bar -->
+        <div class="checkout-progress">
+            <div class="step-indicator completed">
+                <div class="step-circle"><i class="fas fa-check"></i></div>
+                <div>Cart</div>
+            </div>
+            <div class="step-indicator {% if step >= 2 %}active{% endif %} {% if step > 2 %}completed{% endif %}">
+                <div class="step-circle">{% if step > 2 %}<i class="fas fa-check"></i>{% else %}2{% endif %}</div>
+                <div>Address</div>
+            </div>
+            <div class="step-indicator {% if step >= 3 %}active{% endif %} {% if step > 3 %}completed{% endif %}">
+                <div class="step-circle">{% if step > 3 %}<i class="fas fa-check"></i>{% else %}3{% endif %}</div>
+                <div>Payment</div>
+            </div>
+            <div class="step-indicator {% if step >= 4 %}active{% endif %}">
+                <div class="step-circle">4</div>
+                <div>Confirm</div>
+            </div>
+        </div>
+
+        {% if step == 2 %}
+        <!-- STEP 2: ADDRESS -->
+        <div class="checkout-card card">
+            <div class="checkout-header">
+                <h5><i class="fas fa-map-marker-alt text-primary me-2"></i> Select Delivery Address</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('checkout_wizard') }}" method="POST">
+                    <input type="hidden" name="action" value="to_payment">
+
+                    {% if addresses %}
+                    <div class="row g-3">
+                        {% for addr in addresses %}
+                        <div class="col-md-6">
+                            <label class="w-100 mb-0">
+                                <input type="radio" name="address_id" value="{{ addr.id }}" class="d-none address-input"
+                                    required {% if loop.first or (selected_address and selected_address.id==addr.id)
+                                    %}checked{% endif %}>
+                                <div class="address-card p-3 h-100">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <h6 class="fw-bold mb-0">{{ addr.full_name }}</h6>
+                                        <span class="badge bg-secondary">{{ addr.address_type }}</span>
+                                    </div>
+                                    <p class="small text-muted mb-1">{{ addr.street }}, {{ addr.area }}</p>
+                                    <p class="small text-muted mb-1">{{ addr.city }}, {{ addr.state }} - {{ addr.pincode
+                                        }}</p>
+                                    <p class="small fw-bold mb-0"><i class="fas fa-phone-alt me-1"></i> {{ addr.phone }}
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-map-marked-alt fa-3x text-muted mb-3 opacity-50"></i>
+                        <h5>No Addresses Found</h5>
+                        <p class="text-muted">Please add an address to continue checkout.</p>
+                        <a href="{{ url_for('profile') }}" class="btn btn-outline-primary rounded-pill mt-2">Add New
+                            Address</a>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4 pt-3 border-top text-end">
+                        <a href="{{ url_for('view_cart') }}"
+                            class="btn btn-light rounded-pill px-4 me-2 fw-bold text-secondary">Back to Cart</a>
+                        {% if addresses %}
+                        <button type="submit" class="btn checkout-btn">Deliver Here <i
+                                class="fas fa-arrow-right ms-2"></i></button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% elif step == 3 %}
+        <!-- STEP 3: PAYMENT -->
+        <div class="checkout-card card">
+            <div class="checkout-header">
+                <h5><i class="fas fa-credit-card text-primary me-2"></i> Select Payment Method</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('checkout_wizard') }}" method="POST">
+                    <input type="hidden" name="action" value="to_confirm">
+
+                    <div class="list-group mb-4">
+                        <label
+                            class="list-group-item list-group-item-action p-3 d-flex align-items-center {% if balance < total %}bg-light text-muted{% endif %}"
+                            style="cursor: pointer;">
+                            <input class="form-check-input me-3 fs-5" type="radio" name="payment_method" value="Wallet"
+                                required {% if balance>= total %}checked{% else %}disabled{% endif %}>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-wallet text-warning me-2"></i> Pay with Wallet
+                                </h6>
+                                <small class="text-success d-block mt-1"><i class="fas fa-gift"></i> Earn 100 Reward
+                                    Points per ₹10 spent!</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold">₹{{ "{:,.2f}".format(balance) }}</span>
+                                {% if balance < total %} <small class="d-block text-danger mt-1">Insufficient</small>
+                                    {% endif %}
+                            </div>
+                        </label>
+
+                        <label class="list-group-item list-group-item-action p-3 d-flex align-items-center"
+                            style="cursor: pointer;">
+                            <input class="form-check-input me-3 fs-5" type="radio" name="payment_method" value="COD"
+                                required>
+                            <div class="flex-grow-1">
+                                <h6 class="fw-bold mb-0"><i class="fas fa-money-bill-wave text-success me-2"></i> Cash
+                                    on Delivery (COD)</h6>
+                                <small class="text-muted d-block mt-1">Pay when you receive the order.</small>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="bg-light rounded p-3 mb-4 d-flex justify-content-between align-items-center">
+                        <span class="text-muted fw-bold">Amount Payable:</span>
+                        <span class="fs-4 fw-bold text-primary">₹{{ "{:,.2f}".format(total) }}</span>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top text-end">
+                        <button type="submit" name="action" value="to_address" formnovalidate
+                            class="btn btn-light rounded-pill px-4 me-2 fw-bold text-secondary">Back</button>
+                        <button type="submit" class="btn checkout-btn">Continue to Confirmation <i
+                                class="fas fa-arrow-right ms-2"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% elif step == 4 %}
+        <!-- STEP 4: CONFIRMATION -->
+        <div class="checkout-card card">
+            <div class="checkout-header">
+                <h5><i class="fas fa-clipboard-check text-primary me-2"></i> Order Summary</h5>
+            </div>
+            <div class="card-body p-4">
+
+                <h6 class="fw-bold text-uppercase text-muted mb-3"><i class="fas fa-box me-2"></i>Products</h6>
+                <div class="table-responsive mb-4 border rounded">
+                    <table class="table mb-0 align-middle">
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="ps-3 py-3" style="width: 60px;">
+                                    {% if item.image_url %}
+                                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}"
+                                        style="width: 40px; height: 40px; object-fit: contain;">
+                                    {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;"><i class="fas fa-box text-muted"></i></div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <h6 class="mb-0 fw-bold">{{ item.name }}</h6>
+                                    <small class="text-muted">Qty: {{ item.quantity }} × ₹{{
+                                        "{:,.2f}".format(item.price) }}</small>
+                                </td>
+                                <td class="text-end pe-3 fw-bold">
+                                    ₹{{ "{:,.2f}".format(item.price * item.quantity) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-uppercase text-muted mb-2"><i
+                                class="fas fa-map-marker-alt me-2"></i>Delivery To</h6>
+                        <div class="bg-light p-3 rounded h-100">
+                            <h6 class="fw-bold mb-1">{{ selected_address.full_name }}</h6>
+                            <p class="small text-muted mb-0">{{ selected_address.street }}, {{ selected_address.area
+                                }}<br>{{ selected_address.city }}, {{ selected_address.state }} - {{
+                                selected_address.pincode }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-uppercase text-muted mb-2"><i
+                                class="fas fa-credit-card me-2"></i>Payment Details</h6>
+                        <div class="bg-light p-3 rounded h-100 d-flex flex-column justify-content-center">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Method:</span>
+                                <span class="fw-bold">{{ selected_payment }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Total Amount:</span>
+                                <span class="fw-bold text-primary fs-5">₹{{ "{:,.2f}".format(total) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('checkout_wizard') }}" method="POST">
+                    <input type="hidden" name="action" value="place_order">
+                    <div class="mt-4 pt-3 border-top text-end">
+                        <button type="submit" name="action" value="to_payment" formnovalidate
+                            class="btn btn-light rounded-pill px-4 me-2 fw-bold text-secondary">Back</button>
+                        <button type="submit" class="btn checkout-btn px-5"><i class="fas fa-check-circle me-2"></i>
+                            Confirm Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

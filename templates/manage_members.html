@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Team - Hakeem Inventory{% endblock %}
+{% block page_title %}Team Management{% endblock %}
+{% block page_subtitle %}Add, Edit or Remove Team Members{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Side: Team List -->
+    <div class="col-lg-5 col-md-12">
+        <div class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 1rem;">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Team Members</h5>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="resetForm()">
+                    <i class="fas fa-plus me-1"></i> New
+                </button>
+            </div>
+            <div class="list-group list-group-flush" id="memberList"
+                style="max-height: calc(100vh - 300px); overflow-y: auto;">
+                {% for member in team %}
+                <div class="list-group-item list-group-item-action border-0 mb-1 py-3 px-4 member-item"
+                    data-id="{{ member.id }}" data-name="{{ (member.name or '') | replace('"', ' &quot;') }}"
+                    data-role="{{ (member.role or '') | replace('"', ' &quot;') }}"
+                    data-desc="{{ (member.description or '') | replace('"', ' &quot;') }}"
+                    data-img="{{ member.image_url or '' }}" data-linkedin="{{ member.linkedin or '' }}"
+                    data-github="{{ member.github or '' }}" data-email="{{ member.email or '' }}"
+                    onclick="editMember(this)" style="cursor: pointer; transition: all 0.2s; border-radius: 0.5rem;">
+                    <div class="d-flex align-items-center">
+                        <div class="position-relative me-3">
+                            {% if member.image_url and member.image_url.startswith('http') %}
+                            <img src="{{ member.image_url }}" alt="" class="rounded-circle shadow-sm" width="50"
+                                height="50" style="object-fit: cover; border: 2px solid #fff;">
+                            {% elif member.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + member.image_url) }}" alt=""
+                                class="rounded-circle shadow-sm" width="50" height="50"
+                                style="object-fit: cover; border: 2px solid #fff;">
+                            {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ member.name | urlencode }}&background=6366f1&color=fff&size=100"
+                                alt="" class="rounded-circle shadow-sm" width="50" height="50"
+                                style="object-fit: cover; border: 2px solid #fff;">
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ member.name }}</h6>
+                            <p class="text-muted small mb-0 text-truncate">{{ member.role }}</p>
+                        </div>
+                        <div class="ms-2">
+                            <a href="{{ url_for('delete_member', id=member.id) }}"
+                                class="btn btn-sm btn-light-danger rounded-circle action-btn"
+                                onclick="event.stopPropagation(); return confirm('Permanently remove this member?')">
+                                <i class="fas fa-trash-alt fa-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not team %}
+                <div class="p-5 text-center text-muted">
+                    <i class="fas fa-user-friends fa-3x mb-3 opacity-25"></i>
+                    <p>No team members found. Add your first one!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: Edit Form -->
+    <div class="col-lg-7 col-md-12">
+        <div class="card border-0 shadow-sm" style="border-radius: 1rem;">
+            <div class="card-header bg-white py-3 border-0">
+                <h5 class="fw-bold mb-0" id="formTitle">Add Team Member</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('manage_members') }}" method="POST" enctype="multipart/form-data"
+                    id="memberForm">
+                    <input type="hidden" name="action" id="formAction" value="add">
+                    <input type="hidden" name="id" id="memberId">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="nameInput" class="form-control bg-light border-0 py-2"
+                                required placeholder="e.g. John Doe" style="border-radius: 0.5rem;">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
+                            <input type="text" name="role" id="roleInput" class="form-control bg-light border-0 py-2"
+                                required placeholder="e.g. Lead Designer" style="border-radius: 0.5rem;">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Profile Photo</label>
+                        <div class="d-flex align-items-start gap-3 p-3 bg-light rounded-3">
+                            <div class="position-relative">
+                                <img id="previewImg"
+                                    src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=100"
+                                    class="rounded-circle shadow-sm" width="80" height="80"
+                                    style="object-fit: cover; border: 3px solid #fff;">
+                                <label for="fileInput"
+                                    class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center cursor-pointer"
+                                    style="width: 28px; height: 28px; border: 2px solid #fff; cursor: pointer;">
+                                    <i class="fas fa-camera fa-xs"></i>
+                                </label>
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="file" name="image" id="fileInput" class="form-control mb-2"
+                                    accept="image/*" onchange="previewFile()">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text border-0 bg-transparent ps-0">OR URL</span>
+                                    <input type="text" name="image_url" id="imgUrlInput"
+                                        class="form-control border-0 bg-white"
+                                        placeholder="https://example.com/photo.jpg" oninput="previewUrl()">
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Recommended: Square image, max 2MB.</small>
+                    </div>
+
+                    <div class="card bg-light border-0 mb-4" style="border-radius: 0.8rem;">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold mb-3 small text-uppercase text-primary">Additional Details</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">Email Address</label>
+                                    <input type="email" name="email" id="emailInput" class="form-control border-0 py-2"
+                                        placeholder="email@example.com">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">LinkedIn Profile</label>
+                                    <input type="text" name="linkedin" id="linkedinInput"
+                                        class="form-control border-0 py-2" placeholder="Username or URL">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">GitHub Profile</label>
+                                    <input type="text" name="github" id="githubInput" class="form-control border-0 py-2"
+                                        placeholder="Username or URL">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label small fw-semibold">Short Biography</label>
+                                <textarea name="description" id="descInput" class="form-control border-0" rows="3"
+                                    placeholder="Briefly describe this team member..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end border-top pt-4">
+                        <button type="button" class="btn btn-light px-4 rounded-pill fw-bold"
+                            onclick="resetForm()">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold" id="submitBtn">
+                            <i class="fas fa-user-plus me-1"></i> <span>Add Member</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .member-item:hover {
+        background-color: #f8f9fa !important;
+        transform: translateX(5px);
+    }
+
+    .member-item.active {
+        background-color: #eef2ff !important;
+        border-left: 4px solid #6366f1 !important;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .member-item:hover .action-btn {
+        opacity: 1;
+    }
+
+    .btn-light-danger {
+        background-color: #ffebee;
+        color: #ef4444;
+        border: none;
+    }
+
+    .btn-light-danger:hover {
+        background-color: #ef4444;
+        color: white;
+    }
+</style>
+
+<script>
+    function editMember(element) {
+        // Toggle Active State
+        document.querySelectorAll('.member-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+
+        // Update Form Headers
+        document.getElementById('formTitle').textContent = 'Edit Team Member';
+        document.getElementById('formAction').value = 'edit';
+        document.getElementById('submitBtn').querySelector('span').textContent = 'Update Member';
+        document.getElementById('submitBtn').querySelector('i').className = 'fas fa-save me-1';
+        document.getElementById('submitBtn').className = 'btn btn-info px-5 rounded-pill fw-bold text-white';
+
+        // Fill Data
+        document.getElementById('memberId').value = element.dataset.id;
+        document.getElementById('nameInput').value = element.dataset.name;
+        document.getElementById('roleInput').value = element.dataset.role;
+        document.getElementById('imgUrlInput').value = element.dataset.img;
+        document.getElementById('emailInput').value = element.dataset.email;
+        document.getElementById('linkedinInput').value = element.dataset.linkedin;
+        document.getElementById('githubInput').value = element.dataset.github;
+        document.getElementById('descInput').value = element.dataset.desc;
+
+        // Update Preview
+        updatePreview(element.dataset.img, element.dataset.name);
+    }
+
+    function resetForm() {
+        document.querySelectorAll('.member-item').forEach(item => item.classList.remove('active'));
+        document.getElementById('memberForm').reset();
+        document.getElementById('formTitle').textContent = 'Add Team Member';
+        document.getElementById('formAction').value = 'add';
+        document.getElementById('submitBtn').querySelector('span').textContent = 'Add Member';
+        document.getElementById('submitBtn').querySelector('i').className = 'fas fa-user-plus me-1';
+        document.getElementById('submitBtn').className = 'btn btn-primary px-5 rounded-pill fw-bold';
+
+        const preview = document.getElementById('previewImg');
+        preview.src = "https://ui-avatars.com/api/?name=User&background=6366f1&color=fff&size=100";
+    }
+
+    function updatePreview(url, name) {
+        const preview = document.getElementById('previewImg');
+        if (url) {
+            if (url.startsWith('http')) {
+                preview.src = url;
+            } else {
+                preview.src = `/static/uploads/${url}`;
+            }
+        } else {
+            preview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=6366f1&color=fff&size=100`;
+        }
+    }
+
+    function previewUrl() {
+        const url = document.getElementById('imgUrlInput').value;
+        const name = document.getElementById('nameInput').value;
+        updatePreview(url, name);
+    }
+
+    function previewFile() {
+        const file = document.getElementById('fileInput').files[0];
+        const preview = document.getElementById('previewImg');
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %}

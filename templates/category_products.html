@@ -1,0 +1,230 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ category.name }} - Products{% endblock %}
+
+{% block extra_css %}
+<style>
+    .clean-category-list .list-group-item {
+        padding: 12px 20px;
+        transition: all 0.2s ease;
+        color: #495057;
+        background-color: transparent;
+    }
+
+    .clean-category-list .list-group-item:hover {
+        background-color: #f8f9fa;
+        color: #2874f0;
+    }
+
+    .clean-category-list .list-group-item:hover i.fa-folder-open,
+    .clean-category-list .list-group-item:hover i.fa-chevron-right {
+        color: #2874f0 !important;
+    }
+
+    .clean-category-list .list-group-item.active {
+        background-color: #f0f5ff;
+        color: #2874f0;
+        border-left: 4px solid #2874f0 !important;
+        font-weight: 600;
+    }
+
+    .clean-category-list .list-group-item.active i {
+        color: #2874f0 !important;
+    }
+
+    .category-header {
+        background: linear-gradient(135deg, #2874f0 0%, #00d2ff 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(40, 116, 240, 0.2);
+    }
+
+    .product-card {
+        border: none;
+        transition: box-shadow 0.3s;
+        border-radius: 8px;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-img-container {
+        height: 200px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    }
+
+    .product-img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .price-tag {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #212529;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}{{ category.name }}{% endblock %}
+{% block page_subtitle %}Total Items: {{ total_items }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 align-items-start">
+    <!-- Left Sidebar: Categories Panel -->
+    <div class="col-lg-3 d-none d-lg-block sticky-top" style="top: 20px; z-index: 1;">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                <h6 class="fw-bold mb-0 text-uppercase text-muted" style="font-size: 0.85rem; letter-spacing: 0.5px;">
+                    Categories</h6>
+            </div>
+            <div class="list-group list-group-flush clean-category-list pb-2">
+                <a href="{{ url_for('index') }}"
+                    class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                    <i class="fas fa-boxes me-3" style="width: 20px; text-align: center;"></i>
+                    <span class="flex-grow-1 fw-medium" style="word-break: break-word;">All Products</span>
+                    <i class="fas fa-chevron-right ms-2 text-muted" style="font-size: 0.75rem;"></i>
+                </a>
+                {% for cat in global_categories %}
+                <a href="{{ url_for('category_view_flipkart', id=cat.id) }}"
+                    class="list-group-item list-group-item-action border-0 d-flex align-items-center {% if category.id == cat.id %}active{% endif %}"
+                    title="{{ cat.name }}">
+                    <i class="fas fa-folder-open me-3 text-muted" style="width: 20px; text-align: center;"></i>
+                    <span class="flex-grow-1 fw-medium" style="word-break: break-word;">{{ cat.name }}</span>
+                    <i class="fas fa-chevron-right ms-2 text-muted" style="font-size: 0.75rem;"></i>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9 col-md-12">
+        <div class="category-header">
+            <div class="d-flex align-items-center">
+                <div class="category-icon-large me-4" style="font-size: 48px;">
+                    <i class="fas {{ category.icon }}"></i>
+                </div>
+                <div>
+                    <h1 class="fw-bold mb-1">{{ category.name }}</h1>
+                    <p class="mb-0 opacity-75">{{ category.description }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% if products %}
+            {% for p in products %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="card product-card shadow-sm border-0 d-flex flex-column" style="height: 100%;">
+                    <div class="product-img-container">
+                        <a href="{{ url_for('product_view', id=p.id) }}"
+                            class="w-100 h-100 d-flex align-items-center justify-content-center text-decoration-none">
+                            {% if p.image_url and p.image_url.startswith('http') %}
+                            <img src="{{ p.image_url }}" class="product-img" alt="{{ p.name }}">
+                            {% elif p.image_url %}
+                            <img src="{{ url_for('static', filename='uploads/' + p.image_url) }}" class="product-img"
+                                alt="{{ p.name }}">
+                            {% else %}
+                            <img src="https://via.placeholder.com/200" class="product-img" alt="Placeholder">
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="text-muted small mb-1 text-uppercase fw-bold" style="font-size: 0.65rem;">{{
+                            category.name }}
+                        </p>
+                        <h6 class="card-title fw-bold text-truncate mb-2" title="{{ p.name }}">{{ p.name }}</h6>
+
+                        <p class="text-muted small mb-3 flex-grow-1"
+                            style="display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                            {{ p.description or 'No description available for this product. Premium quality guaranteed.'
+                            }}
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 mt-auto">
+                            <span class="price-tag fs-5 text-primary">₹{{ "{:,.0f}".format(p.price) }}</span>
+                            {% if p.quantity > 0 %}
+                            <span class="badge bg-success-light text-success stock-badge"><i
+                                    class="fas fa-check-circle me-1"></i> In Stock</span>
+                            {% else %}
+                            <span class="badge bg-danger-light text-danger stock-badge">Sold Out</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            {% if p.quantity > 0 %}
+                            <div class="d-flex gap-2">
+                                <form action="{{ url_for('add_to_cart', id=p.id) }}" method="POST" class="w-50">
+                                    <button type="submit"
+                                        class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-bold">
+                                        <i class="fas fa-cart-plus"></i> Cart
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('product_view', id=p.id) }}"
+                                    class="btn btn-primary btn-sm rounded-pill w-50 fw-bold">
+                                    View Details
+                                </a>
+                            </div>
+                            {% else %}
+                            <a href="{{ url_for('product_view', id=p.id) }}"
+                                class="btn btn-secondary btn-sm rounded-pill w-100">View Details (Out of Stock)</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="mb-4">
+                    <h3 class="mb-3 text-secondary border-bottom pb-2">Category Empty</h3>
+                    <p class="text-muted fs-5">No products found for this category at the moment.</p>
+                </div>
+                <a href="{{ url_for('shop') }}" class="btn btn-primary mt-3">Go Back to Shopping</a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if total_pages and total_pages > 1 %}
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link shadow-sm border-0 bg-white text-primary fw-bold mx-1 rounded-3"
+                        href="{{ url_for('category_view_flipkart', id=category.id, page=page-1) }}"><i
+                            class="fas fa-chevron-left"></i> Prev</a>
+                </li>
+
+                {% for p_num in range(1, total_pages + 1) %}
+                {% if p_num == 1 or p_num == total_pages or (p_num >= page - 2 and p_num <= page + 2) %} <li
+                    class="page-item {% if p_num == page %}active{% endif %}">
+                    <a class="page-link shadow-sm border-0 {% if p_num == page %}bg-primary text-white{% else %}bg-white text-dark{% endif %} fw-bold mx-1 rounded-3"
+                        href="{{ url_for('category_view_flipkart', id=category.id, page=p_num) }}">{{ p_num }}</a>
+                    </li>
+                    {% elif p_num == page - 3 or p_num == page + 3 %}
+                    <li class="page-item disabled"><span
+                            class="page-link border-0 bg-transparent text-muted mx-1">...</span>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link shadow-sm border-0 bg-white text-primary fw-bold mx-1 rounded-3"
+                            href="{{ url_for('category_view_flipkart', id=category.id, page=page+1) }}">Next <i
+                                class="fas fa-chevron-right"></i></a>
+                    </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

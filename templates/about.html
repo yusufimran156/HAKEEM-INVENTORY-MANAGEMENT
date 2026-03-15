@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}About - Hakeem Inventory{% endblock %}
+{% block page_title %}About Hakeem Inventory{% endblock %}
+{% block page_subtitle %}The story of our growth and innovation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4 animate-fade-in">
+            <div class="card-body p-5">
+                <section class="mb-5">
+                    <h2 class="h4 fw-bold text-primary mb-3"><i class="fas fa-seedling me-2"></i>Origin</h2>
+                    <p class="text-muted">
+                        Hakeem Inventory was born out of a simple need: to provide small and medium-sized businesses
+                        with a powerful yet accessible tool to manage their stock. Founded in 2024, we started as a
+                        small project to automate manual ledger entries and have since grown into a comprehensive
+                        solution.
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-bold text-primary mb-3"><i class="fas fa-code me-2"></i>Development Process</h2>
+                    <p class="text-muted">
+                        Built with a focus on modern technologies, Hakeem Inventory utilizes Python Flask for a robust
+                        backend, MySQL for reliable data storage, and a responsive frontend designed with Bootstrap 5
+                        and custom CSS. Our development process follows agile methodologies, ensuring constant
+                        improvements and user-centric features.
+                    </p>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item bg-transparent px-0"><i class="fas fa-check text-success me-2"></i>
+                            Scalable Micro-service Inspired Architecture</li>
+                        <li class="list-group-item bg-transparent px-0"><i class="fas fa-check text-success me-2"></i>
+                            User-Centric UI/UX Design</li>
+                        <li class="list-group-item bg-transparent px-0"><i class="fas fa-check text-success me-2"></i>
+                            Rigorous Testing & Security Standards</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="h4 fw-bold text-primary mb-3"><i class="fas fa-trophy me-2"></i>Achievements</h2>
+                    <p class="text-muted">
+                        Since our launch, we have helped hundreds of businesses optimize their supply chains, reduce
+                        waste, and increase profitability. Our system has processed thousands of transactions with 99.9%
+                        accuracy.
+                    </p>
+                    <div class="row text-center mt-4">
+                        <div class="col-4">
+                            <h3 class="h2 fw-bold mb-0">500+</h3>
+                            <small class="text-muted">Users</small>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="h2 fw-bold mb-0">1M+</h3>
+                            <small class="text-muted">Items Tracked</small>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="h2 fw-bold mb-0">₹10Cr+</h3>
+                            <small class="text-muted">Revenue Managed</small>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

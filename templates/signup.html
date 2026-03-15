@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Hakeem Inventory</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563EB;
+            --dark: #1E293B;
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Fade-in Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        /* Split Layout */
+        .split-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .split-left {
+            flex: 1;
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 50%, #3b82f6 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative shapes for the left side */
+        .split-left::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+        }
+
+        .split-left::after {
+            content: '';
+            position: absolute;
+            bottom: -10%;
+            right: -10%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+            border-radius: 50%;
+        }
+
+        .left-content {
+            z-index: 1;
+            text-align: center;
+            max-width: 480px;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.15));
+            transition: transform 0.3s ease;
+        }
+
+        .illustration:hover {
+            transform: translateY(-5px);
+        }
+
+        .split-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: var(--bg);
+        }
+
+        .auth-card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            padding: 48px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Form Inputs */
+        .form-floating>.form-control {
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            padding: 1rem 1.25rem;
+            height: 3.5rem;
+            color: var(--text-primary);
+            background-color: var(--bg);
+            transition: all 0.3s ease;
+            box-shadow: none;
+        }
+
+        .form-floating>.form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+            background-color: var(--card);
+        }
+
+        .form-floating>label {
+            color: var(--text-secondary);
+            padding: 1rem 1.25rem;
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-secondary);
+            z-index: 10;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #94a3b8;
+            border-color: #94a3b8;
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .link-primary {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .link-primary:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        /* Password Strength */
+        .strength-meter-container {
+            margin-top: 8px;
+            padding: 0 4px;
+        }
+
+        .strength-meter {
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            width: 100%;
+        }
+
+        .strength-bar {
+            height: 100%;
+            transition: width 0.4s ease, background-color 0.4s ease;
+            width: 0%;
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        .strength-weak {
+            background-color: var(--danger);
+            width: 33.33%;
+        }
+
+        .strength-medium {
+            background-color: var(--warning);
+            width: 66.66%;
+        }
+
+        .strength-strong {
+            background-color: var(--success);
+            width: 100%;
+        }
+
+        .text-weak {
+            color: var(--danger);
+        }
+
+        .text-medium {
+            color: var(--warning);
+        }
+
+        .text-strong {
+            color: var(--success);
+        }
+
+        .password-hints {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: var(--bg);
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hint-item {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            transition: color 0.2s ease;
+        }
+
+        .hint-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .hint-icon {
+            margin-right: 8px;
+            font-size: 0.9rem;
+            width: 14px;
+            text-align: center;
+        }
+
+        .hint-item.valid {
+            color: var(--success);
+        }
+
+        .hint-item.valid .hint-icon::before {
+            content: "\f058";
+            /* fa-check-circle */
+            color: var(--success);
+            font-weight: 900;
+        }
+
+        .hint-item.invalid .hint-icon::before {
+            content: "\f111";
+            /* fa-circle outline */
+            color: #cbd5e1;
+            font-weight: 400;
+        }
+
+        /* Toasts */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .toast-header {
+            border-bottom: none;
+            padding: 12px 16px 0;
+            background: transparent;
+        }
+
+        .toast-body {
+            padding: 8px 16px 16px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .split-left {
+                display: none;
+            }
+
+            .split-right {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Flash Messages (Toasts) -->
+    <div class="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        {% set toast_class = 'success' if category == 'success' else ('error' if category == 'error' or category ==
+        'danger' else 'warning') %}
+        {% set icon = 'check-circle text-success' if toast_class == 'success' else ('exclamation-circle text-danger' if
+        toast_class == 'error' else 'info-circle text-warning') %}
+        <div class="toast {{ toast_class }} show fade-in" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-{{ icon }} me-2 fs-5"></i>
+                <strong class="me-auto text-dark">{{ 'Success' if toast_class == 'success' else ('Error' if toast_class
+                    == 'error' else 'Notice') }}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                {{ message }}
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="split-layout">
+        <!-- Left Side: Branding -->
+        <div class="split-left">
+            <div class="left-content fade-in">
+                <!-- A professional SVG illustration related to inventory/dashboard -->
+                <svg class="illustration" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="50" y="80" width="400" height="260" rx="16" fill="#ffffff" opacity="0.95" />
+                    <rect x="50" y="80" width="400" height="40" rx="16" fill="#e0e7ff" />
+                    <circle cx="80" cy="100" r="6" fill="#cbd5e1" />
+                    <circle cx="100" cy="100" r="6" fill="#cbd5e1" />
+                    <circle cx="120" cy="100" r="6" fill="#cbd5e1" />
+                    <rect x="80" y="150" width="100" height="120" rx="8" fill="#3b82f6" />
+                    <rect x="210" y="190" width="100" height="80" rx="8" fill="#ef4444" />
+                    <rect x="340" y="130" width="80" height="140" rx="8" fill="#10b981" />
+                    <path d="M50 300 Q250 200 450 280 L450 340 L50 340 Z" fill="#2563EB" opacity="0.1" />
+                </svg>
+                <h1 class="fw-bold mb-3 display-5">Join Us</h1>
+                <p class="fs-5 opacity-75">Streamline your inventory management with real-time insights, effortless
+                    tracking, and seamless control over your entire operation.</p>
+            </div>
+        </div>
+
+        <!-- Right Side: Create Account Form -->
+        <div class="split-right">
+            <div class="auth-card fade-in" style="animation-delay: 0.1s;">
+                <div class="text-center mb-5 d-lg-none">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow"
+                        style="width: 60px; height: 60px;">
+                        <i class="fas fa-boxes-stacked fs-3"></i>
+                    </div>
+                    <h2 class="fw-bold mt-3 mb-1 text-dark">Create Account</h2>
+                    <p class="text-muted small">Join Hakeem Inventory</p>
+                </div>
+
+                <div class="text-center mb-4 d-none d-lg-block">
+                    <h2 class="fw-bold text-dark mb-1">Create Account</h2>
+                    <p class="text-muted">Start managing your inventory</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('signup') }}" onsubmit="return validateForm()">
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="floatingUsername" name="username"
+                            placeholder="Username" required minlength="3">
+                        <label for="floatingUsername">Full Name or Username</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="floatingEmail" name="email"
+                            placeholder="name@example.com" required>
+                        <label for="floatingEmail">Email Address</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="tel" class="form-control" id="floatingPhone" name="phone_number"
+                            placeholder="Phone Number">
+                        <label for="floatingPhone">Phone Number</label>
+                    </div>
+
+                    <!-- Password Group -->
+                    <div class="mb-3">
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control pe-5" id="password" name="password"
+                                placeholder="Password" required minlength="8" oninput="analyzePassword()">
+                            <label for="password">Password</label>
+                            <i class="far fa-eye password-toggle fs-5" id="toggleIcon"
+                                onclick="togglePassword('password', 'toggleIcon')"></i>
+                        </div>
+
+                        <div class="strength-meter-container">
+                            <div class="strength-meter">
+                                <div id="strength-bar" class="strength-bar"></div>
+                            </div>
+                            <div id="strength-text" class="strength-text text-muted">Awaiting input...</div>
+                        </div>
+
+                        <div class="password-hints" id="passwordHints">
+                            <div class="hint-item invalid" id="hint-length"><i class="far hint-icon"></i> Minimum 8
+                                characters</div>
+                            <div class="hint-item invalid" id="hint-upper"><i class="far hint-icon"></i> At least one
+                                uppercase letter</div>
+                            <div class="hint-item invalid" id="hint-lower"><i class="far hint-icon"></i> At least one
+                                lowercase letter</div>
+                            <div class="hint-item invalid" id="hint-number"><i class="far hint-icon"></i> At least one
+                                number</div>
+                            <div class="hint-item invalid" id="hint-special"><i class="far hint-icon"></i> At least one
+                                special character (!@#$%^&*)</div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control pe-5" id="confirm_password"
+                                name="confirm_password" placeholder="Confirm Password" required oninput="checkMatch()">
+                            <label for="confirm_password">Confirm Password</label>
+                            <i class="far fa-eye password-toggle fs-5" id="toggleIconConfirm"
+                                onclick="togglePassword('confirm_password', 'toggleIconConfirm')"></i>
+                        </div>
+                        <div id="match-text" class="small mt-1 d-none fw-semibold"></div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn btn-primary w-100 mb-4 shadow-sm"
+                        disabled>Register</button>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">Already have an account? <a href="{{ url_for('login') }}"
+                                class="link-primary fw-bold">Sign In</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isStrongPassword = false;
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function analyzePassword() {
+            const pwd = document.getElementById('password').value;
+            const bar = document.getElementById('strength-bar');
+            const text = document.getElementById('strength-text');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Regex patterns
+            const hasLength = pwd.length >= 8;
+            const hasUpper = /[A-Z]/.test(pwd);
+            const hasLower = /[a-z]/.test(pwd);
+            const hasNumber = /[0-9]/.test(pwd);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
+
+            // Update DOM hints
+            updateHint('hint-length', hasLength);
+            updateHint('hint-upper', hasUpper);
+            updateHint('hint-lower', hasLower);
+            updateHint('hint-number', hasNumber);
+            updateHint('hint-special', hasSpecial);
+
+            // Calculate met score
+            let score = 0;
+            if (hasLength) score++;
+            if (hasUpper) score++;
+            if (hasLower) score++;
+            if (hasNumber) score++;
+            if (hasSpecial) score++;
+
+            // Handle strength text and bar classes
+            bar.className = 'strength-bar';
+            text.className = 'strength-text';
+
+            if (pwd.length === 0) {
+                text.textContent = 'Awaiting input...';
+                text.classList.add('text-muted');
+                isStrongPassword = false;
+            } else if (score <= 2) {
+                bar.classList.add('strength-weak');
+                text.textContent = 'Weak Password';
+                text.classList.add('text-weak');
+                isStrongPassword = false;
+            } else if (score === 3 || score === 4) {
+                bar.classList.add('strength-medium');
+                text.textContent = 'Medium Strength';
+                text.classList.add('text-medium');
+                isStrongPassword = false;
+            } else if (score === 5) {
+                bar.classList.add('strength-strong');
+                text.textContent = 'Strong Password';
+                text.classList.add('text-strong');
+                isStrongPassword = true;
+            }
+
+            checkMatch(); // Revalidate matches anytime password changes
+        }
+
+        function updateHint(elementId, isValid) {
+            const el = document.getElementById(elementId);
+            if (isValid) {
+                el.classList.remove('invalid');
+                el.classList.add('valid');
+            } else {
+                el.classList.remove('valid');
+                el.classList.add('invalid');
+            }
+        }
+
+        function checkMatch() {
+            const pwd = document.getElementById('password').value;
+            const conf = document.getElementById('confirm_password').value;
+            const matchText = document.getElementById('match-text');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (conf.length > 0) {
+                matchText.classList.remove('d-none');
+                if (pwd === conf) {
+                    matchText.textContent = "Passwords match \u2713";
+                    matchText.className = "small mt-1 text-success fw-semibold";
+
+                    // Allow submit if password is strong AND they match
+                    if (isStrongPassword) {
+                        submitBtn.disabled = false;
+                    } else {
+                        submitBtn.disabled = true;
+                    }
+                } else {
+                    matchText.textContent = "Passwords do not match!";
+                    matchText.className = "small mt-1 text-danger fw-semibold";
+                    submitBtn.disabled = true;
+                }
+            } else {
+                matchText.classList.add('d-none');
+                submitBtn.disabled = true;
+            }
+        }
+
+        function validateForm() {
+            // Final client side validation failsafe
+            if (!isStrongPassword) {
+                alert("Please meet all password requirements before signing up.");
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize Toasts
+        document.addEventListener('DOMContentLoaded', function () {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl, { autohide: true, delay: 5000 })
+            });
+            toastList.forEach(toast => toast.show());
+        });
+    </script>
+</body>
+
+</html>

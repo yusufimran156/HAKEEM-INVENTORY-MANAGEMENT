@@ -1,0 +1,174 @@
+{% extends "layout.html" %}
+{% block title %}{{ 'Edit Admin Team Member' if member else 'Add Admin Team Member' }}{% endblock %}
+{% block page_title %}Team Management{% endblock %}
+{% block page_subtitle %}{{ 'Edit team member details' if member else 'Add a new member to the admin team' }}{% endblock
+%}
+
+{% block page_actions %}
+<a href="{{ url_for('admin_team') }}" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm hover-scale">
+    <i class="fas fa-arrow-left me-2"></i>Back to Team
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom py-4 align-items-center d-flex justify-content-between">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="fas {{ 'fa-user-edit' if member else 'fa-user-plus' }} text-primary me-2"></i>
+                    {{ 'Update Member Information' if member else 'New Member Details' }}
+                </h5>
+            </div>
+            <div class="card-body p-5">
+                <form
+                    action="{{ url_for('admin_edit_team_member', id=member.id) if member else url_for('admin_add_team_member') }}"
+                    method="POST" enctype="multipart/form-data">
+
+                    <div class="row g-4">
+                        <!-- Full Name -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Full Name <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" name="full_name"
+                                class="form-control form-control-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring"
+                                value="{{ member.full_name if member else '' }}" placeholder="John Doe" required>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Email Address <span
+                                    class="text-danger">*</span></label>
+                            <input type="email" name="email"
+                                class="form-control form-control-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring"
+                                value="{{ member.email if member else '' }}" placeholder="john@company.com" required>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Phone Number</label>
+                            <input type="text" name="phone"
+                                class="form-control form-control-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring"
+                                value="{{ member.phone if member else '' }}" placeholder="+1 234 567 8900">
+                        </div>
+
+                        <!-- Role -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Role <span
+                                    class="text-danger">*</span></label>
+                            <select name="role"
+                                class="form-select form-select-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring"
+                                required>
+                                <option value="" disabled {{ 'selected' if not member else '' }}>Select Role</option>
+                                <option value="Manager" {{ 'selected' if member and member.role=='Manager' else '' }}>
+                                    Manager</option>
+                                <option value="Staff" {{ 'selected' if member and member.role=='Staff' else '' }}>Staff
+                                </option>
+                                <option value="Support" {{ 'selected' if member and member.role=='Support' else '' }}>
+                                    Support</option>
+                                <option value="Delivery" {{ 'selected' if member and member.role=='Delivery' else '' }}>
+                                    Delivery</option>
+                                <option value="Accountant" {{ 'selected' if member and member.role=='Accountant' else ''
+                                    }}>Accountant</option>
+                            </select>
+                        </div>
+
+                        <!-- Department -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Department <span
+                                    class="text-danger">*</span></label>
+                            <select name="department"
+                                class="form-select form-select-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring"
+                                required>
+                                <option value="" disabled {{ 'selected' if not member else '' }}>Select Department
+                                </option>
+                                <option value="Inventory" {{ 'selected' if member and member.department=='Inventory'
+                                    else '' }}>Inventory</option>
+                                <option value="Sales" {{ 'selected' if member and member.department=='Sales' else '' }}>
+                                    Sales</option>
+                                <option value="Finance" {{ 'selected' if member and member.department=='Finance' else ''
+                                    }}>Finance</option>
+                                <option value="Support" {{ 'selected' if member and member.department=='Support' else ''
+                                    }}>Support</option>
+                            </select>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-6 form-group">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Status</label>
+                            <select name="status"
+                                class="form-select form-select-lg bg-light border-0 px-3 py-2 rounded-3 shadow-sm focus-ring">
+                                <option value="Active" {{ 'selected' if not member or member.status=='Active' else ''
+                                    }}>Active</option>
+                                <option value="Inactive" {{ 'selected' if member and member.status=='Inactive' else ''
+                                    }}>Inactive</option>
+                            </select>
+                        </div>
+
+                        <!-- Profile Image -->
+                        <div class="col-12 form-group mt-2">
+                            <label class="form-label fw-semibold text-muted small text-uppercase">Profile Image
+                                Upload</label>
+                            <div class="d-flex align-items-center gap-4">
+                                {% if member and member.profile_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + member.profile_image) }}"
+                                    alt="Preview" class="rounded-circle object-fit-cover border shadow-sm" width="80"
+                                    height="80">
+                                {% else %}
+                                <div class="rounded-circle bg-light border shadow-sm d-flex align-items-center justify-content-center text-muted"
+                                    style="width: 80px; height: 80px; font-size: 2rem;">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                {% endif %}
+                                <div class="flex-grow-1">
+                                    <input type="file" name="profile_image"
+                                        class="form-control form-control-lg rounded-3 shadow-sm"
+                                        accept="image/jpeg, image/png">
+                                    <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle me-1"></i>
+                                        Acceptable formats: .jpg, .png. Suggested size: 300x300.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end align-items-center mt-5 pt-3 border-top border-light gap-3">
+                        <a href="{{ url_for('admin_team') }}"
+                            class="btn btn-light rounded-pill px-4 fw-semibold text-muted hover-scale shadow-sm">Cancel</a>
+                        <button type="submit"
+                            class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm hover-scale">
+                            <i class="fas {{ 'fa-save' if member else 'fa-user-plus' }} me-2"></i> {{ 'Save Changes' if
+                            member else 'Add Team Member' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .focus-ring:focus {
+        outline: none;
+        box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25) !important;
+        background-color: #fff !important;
+    }
+
+    .hover-scale {
+        transition: transform 0.2s ease;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.03);
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .form-group label {
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

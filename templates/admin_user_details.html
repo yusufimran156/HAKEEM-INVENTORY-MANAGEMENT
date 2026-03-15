@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+
+{% block title %}User Details - {{ user.username }}{% endblock %}
+
+{% block page_title %}User Activity Profile{% endblock %}
+{% block page_subtitle %}Detailed monitoring for {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+    <!-- User Overview Card -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="mb-4">
+                    <img src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2874f0&color=fff&size=128&bold=true"
+                        class="rounded-circle shadow" width="100" height="100">
+                </div>
+                <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                <p class="text-muted mb-4">{{ user.email }}</p>
+
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    <span class="badge bg-primary-light text-primary px-3 py-2 rounded-pill text-uppercase"
+                        style="font-size: 0.7rem;">{{ user.role }}</span>
+                    <span class="badge bg-success-light text-success px-3 py-2 rounded-pill text-uppercase"
+                        style="font-size: 0.7rem;">Active</span>
+                </div>
+
+                <div class="p-3 bg-light rounded-4 mb-3">
+                    <small class="text-muted d-block text-uppercase fw-bold mb-1" style="font-size: 0.65rem;">Wallet
+                        Balance</small>
+                    <h3 class="fw-bold text-dark mb-0">₹{{ user.balance|default(0.00) }}</h3>
+                </div>
+
+                <div class="text-start mt-4">
+                    <small class="text-muted d-block mb-1"><i class="far fa-calendar-alt me-2"></i>Joined: {{
+                        user.created_at.strftime('%d %b, %Y') if user.created_at else 'N/A' }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-lg-8">
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-primary text-white">
+                    <h6 class="opacity-75 text-uppercase small fw-bold mb-2">Total Orders</h6>
+                    <h2 class="fw-bold mb-0">{{ stats.total_orders or 0 }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-success text-white">
+                    <h6 class="opacity-75 text-uppercase small fw-bold mb-2">Total Spent</h6>
+                    <h2 class="fw-bold mb-0">₹{{ stats.total_spent or 0.00 }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-info text-white">
+                    <h6 class="opacity-75 text-uppercase small fw-bold mb-2">Last Purchase</h6>
+                    <p class="fw-bold mb-0 text-truncate">{{ stats.last_purchase.strftime('%d %b, %Y') if
+                        stats.last_purchase else 'None' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase History Table -->
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Purchase History</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="border-0 px-4">Product</th>
+                                <th class="border-0">Qty</th>
+                                <th class="border-0">Total</th>
+                                <th class="border-0">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td class="px-4">
+                                    <span class="fw-bold">{{ order.product_name }}</span>
+                                </td>
+                                <td>{{ order.quantity }}</td>
+                                <td class="fw-bold text-primary">₹{{ order.total_amount }}</td>
+                                <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not orders %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">No purchases found.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Wallet Transactions -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Wallet Transaction History</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4 border-0">Transaction ID</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0">Method</th>
+                                <th class="border-0">Amount</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td class="px-4"><code class="text-muted small">{{ tx.transaction_id }}</code></td>
+                                <td>
+                                    {% if tx.type == 'CREDIT' %}
+                                    <span class="text-success"><i class="fas fa-arrow-down me-1"></i> Credit</span>
+                                    {% else %}
+                                    <span class="text-danger"><i class="fas fa-arrow-up me-1"></i> Debit</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ tx.payment_method }}</td>
+                                <td class="fw-bold">₹{{ tx.amount }}</td>
+                                <td>{{ tx.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ 'success' if tx.status == 'SUCCESS' else 'warning' }}-light text-{{ 'success' if tx.status == 'SUCCESS' else 'warning' }} rounded-pill px-3">
+                                        {{ tx.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% if not transactions %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">No transactions found.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('users') }}" class="btn btn-outline-secondary rounded-pill px-4">
+        <i class="fas fa-arrow-left me-2"></i> Back to Users
+    </a>
+</div>
+{% endblock %}
