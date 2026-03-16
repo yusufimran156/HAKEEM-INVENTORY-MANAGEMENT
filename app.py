@@ -1,4 +1,6 @@
 import os
+import pymysql
+pymysql.install_as_MySQLdb()
 import time
 import io
 import secrets
@@ -1691,10 +1693,6 @@ def mark_order_paid(id):
 # Team routes fully removed
 
 if __name__ == '__main__':
-    print("Starting Hakeem Inventory System...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
-import os
-
-if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    print(f"Starting Hakeem Inventory System on port {port}...")
+    app.run(debug=True, host='0.0.0.0', port=port)
